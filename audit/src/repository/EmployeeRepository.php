@@ -1,24 +1,73 @@
 <?php
 
-readonly class EmployeeRepository {
+readonly class EmployeeRepository
+{
 
-    private function __construct(private PDO $pdo) {}
+    public function __construct(private PDO $pdo)
+    {
+    }
 
-    public function findById(int $id): array|false {
-        $stmt = $this->pdo->prepare('SELECT * FROM employee WHERE id = :id');
-        $stmt->execute([$id]);
+    public function findById(int $id): array|false
+    {
+        $stmt = $this->pdo->prepare('SELECT * FROM employee WHERE id = :id AND is_deleted = FALSE');
+        $stmt->execute([':id' => $id]);
         return $stmt->fetch();
     }
 
-    public function findAll(): array {
-        return $this->pdo
-            ->prepare('SELECT * FROM employee ORDER BY id DESC')
-            ->fetchAll();
+    public function findAll(): array
+    {
+        $stmt = $this->pdo->prepare('SELECT * FROM employee WHERE is_deleted = FALSE ORDER BY id DESC');
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
 
+    public function create(array $data): int
+    {
+        $stmt = $this->pdo->prepare('
+            INSERT INTO employee (category_id, first_name, last_name, middle_name, birth_date)
+            VALUES (:category_id, :first_name, :last_name, :middle_name, :birth_date)
+        ');
 
-    public function create(array $data): int {
-
+        $stmt->execute([
+            ':category_id' => $data['category_id'],
+            ':first_name' => $data['first_name'],
+            ':last_name' => $data['last_name'],
+            ':middle_name' => $data['middle_name'] ?? null,
+            ':birth_date' => $data['birth_date'],
+        ]);
+        return (int)$this->pdo->lastInsertId();
     }
 
+    public function update(int $id, array $data): bool
+    {
+        $stmt = $this->pdo->prepare('
+            UPDATE employee
+            SET category_id  = :category_id,
+                first_name   = :first_name,
+                last_name    = :last_name,
+                middle_name  = :middle_name,
+                birth_date   = :birth_date,
+                updated_at   = CURRENT_TIMESTAMP
+            WHERE id = :id AND is_deleted = FALSE
+        ');
+
+        return $stmt->execute([
+            ':category_id' => $data['category_id'],
+            ':first_name' => $data['first_name'],
+            ':last_name' => $data['last_name'],
+            ':middle_name' => $data['middle_name'] ?? null,
+            ':birth_date' => $data['birth_date'],
+            ':id' => $id,
+        ]);
+    }
+
+    public function delete(int $id): bool
+    {
+        $stmt = $this->pdo->prepare('
+            UPDATE employee
+            SET is_deleted = TRUE, deleted_at = CURRENT_TIMESTAMP
+            WHERE id = :id AND is_deleted = FALSE
+        ');
+        return $stmt->execute([':id' => $id]);
+    }
 }

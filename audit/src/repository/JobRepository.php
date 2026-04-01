@@ -1,0 +1,71 @@
+<?php
+
+readonly class JobRepository
+{
+
+    public function __construct(private PDO $pdo)
+    {
+    }
+
+    public function findById(int $id): array|false
+    {
+        $stmt = $this->pdo->prepare('SELECT * FROM job WHERE id = :id AND is_deleted = FALSE');
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch();
+    }
+
+    public function findAll(): array
+    {
+        $stmt = $this->pdo->prepare('SELECT * FROM job WHERE is_deleted = FALSE ORDER BY id DESC');
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function create(array $data): int
+    {
+        $stmt = $this->pdo->prepare('
+            INSERT INTO job (name, company_name, start_at)
+            VALUES (:name, :company_name, :start_at)
+        ');
+
+        $stmt->execute([
+            ':name' => $data['name'],
+            ':company_name' => $data['company_name'],
+            ':start_at' => $data['start_at'],
+        ]);
+        return (int)$this->pdo->lastInsertId();
+    }
+
+    public function update(int $id, array $data): bool
+    {
+        $stmt = $this->pdo->prepare('
+            UPDATE job
+            SET name         = :name,
+                company_name = :company_name,
+                start_at     = :start_at,
+                is_completed = :is_completed,
+                completed_at = :completed_at,
+                updated_at   = CURRENT_TIMESTAMP
+            WHERE id = :id AND is_deleted = FALSE
+        ');
+
+        return $stmt->execute([
+            ':name' => $data['name'],
+            ':company_name' => $data['company_name'],
+            ':start_at' => $data['start_at'],
+            ':is_completed' => $data['is_completed'] ?? false,
+            ':completed_at' => $data['completed_at'] ?? null,
+            ':id' => $id,
+        ]);
+    }
+
+    public function delete(int $id): bool
+    {
+        $stmt = $this->pdo->prepare('
+            UPDATE job
+            SET is_deleted = TRUE, deleted_at = CURRENT_TIMESTAMP
+            WHERE id = :id AND is_deleted = FALSE
+        ');
+        return $stmt->execute([':id' => $id]);
+    }
+}
