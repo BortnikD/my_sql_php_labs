@@ -1,0 +1,19 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password     # Пароль для root
+      MYSQL_DATABASE: audit_db            # Имя базы данных, которая создастся при старте
+      MYSQL_USER: db_user                    # Имя пользователя
+      MYSQL_PASSWORD: db_password            # Пароль пользователя
+    ports:
+      - "3306:3306"                          # Проброс порта: внешний_порт:внутренний_порт
+    volumes:
+      - mysql_data:/var/lib/mysql            # Сохранение данных базы на хост-машине
+    restart: unless-stopped                  # Автоматический перезапуск при падении
+
+volumes:
+  mysql_data:
+
+# docker exec -it mysql_db mysql -u root -p -e "SET GLOBAL log_bin_trust_function_creators = 1;"
