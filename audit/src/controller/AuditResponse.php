@@ -1,6 +1,6 @@
 <?php
 
-class AuditResponseFactory {
+class AuditResponse {
 
     public static function success(mixed $data): void {
         http_response_code(200);

@@ -1,42 +1,42 @@
 <?php
 
-class EmployeeController
+class JobController
 {
 
-    private EmployeeRepository $repository;
+    private JobRepository $repository;
 
     public function __construct(private readonly PDO $pdo)
     {
-        $this->repository = new EmployeeRepository($this->pdo);
+        $this->repository = new JobRepository($this->pdo);
     }
 
     public function handle(string $method, ?int $id): void
     {
         match ($method) {
-            'GET' => $id ? $this->getEmployeeById($id) : $this->getAllEmployees(),
-            'POST' => $this->createEmployee(),
-            'PUT' => $this->updateEmployee($id),
-            'DELETE' => $this->deleteEmployee($id),
+            'GET' => $id ? $this->getJobById($id) : $this->getAllJobs(),
+            'POST' => $this->createJob(),
+            'PUT' => $this->updateJob($id),
+            'DELETE' => $this->deleteJob($id),
             default => AuditResponse::error('Method Not Allowed', 405),
         };
     }
 
-    private function getAllEmployees(): void
+    private function getAllJobs(): void
     {
-        $employees = $this->repository->findAll();
-        AuditResponse::success($employees);
+        $jobs = $this->repository->findAll();
+        AuditResponse::success($jobs);
     }
 
-    private function getEmployeeById(int $id): void
+    private function getJobById(int $id): void
     {
-        $employee = $this->repository->findById($id);
-        if (!$employee) {
-            AuditResponse::error('Employee not found', 404);
+        $job = $this->repository->findById($id);
+        if (!$job) {
+            AuditResponse::error('Job not found', 404);
         }
-        AuditResponse::success($employee);
+        AuditResponse::success($job);
     }
 
-    private function createEmployee(): void
+    private function createJob(): void
     {
         $data = json_decode(file_get_contents('php://input'), true);
         if (!$data) {
@@ -46,7 +46,7 @@ class EmployeeController
         AuditResponse::created(['id' => $id]);
     }
 
-    private function updateEmployee(?int $id): void
+    private function updateJob(?int $id): void
     {
         if (!$id) {
             AuditResponse::error('ID is required', 400);
@@ -57,16 +57,16 @@ class EmployeeController
         }
         $ok = $this->repository->update($id, $data);
         $ok ? AuditResponse::success(['updated' => true])
-            : AuditResponse::error('Employee not found', 404);
+            : AuditResponse::error('Job not found', 404);
     }
 
-    private function deleteEmployee(?int $id): void
+    private function deleteJob(?int $id): void
     {
         if (!$id) {
             AuditResponse::error('ID is required', 400);
         }
         $ok = $this->repository->delete($id);
         $ok ? AuditResponse::success(['deleted' => true])
-            : AuditResponse::error('Employee not found', 404);
+            : AuditResponse::error('Job not found', 404);
     }
 }

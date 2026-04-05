@@ -1,42 +1,42 @@
 <?php
 
-class EmployeeController
+class CategoryController
 {
 
-    private EmployeeRepository $repository;
+    private CategoryRepository $repository;
 
     public function __construct(private readonly PDO $pdo)
     {
-        $this->repository = new EmployeeRepository($this->pdo);
+        $this->repository = new CategoryRepository($this->pdo);
     }
 
     public function handle(string $method, ?int $id): void
     {
         match ($method) {
-            'GET' => $id ? $this->getEmployeeById($id) : $this->getAllEmployees(),
-            'POST' => $this->createEmployee(),
-            'PUT' => $this->updateEmployee($id),
-            'DELETE' => $this->deleteEmployee($id),
+            'GET' => $id ? $this->getCategoryById($id) : $this->getAllCategories(),
+            'POST' => $this->createCategory(),
+            'PUT' => $this->updateCategory($id),
+            'DELETE' => $this->deleteCategory($id),
             default => AuditResponse::error('Method Not Allowed', 405),
         };
     }
 
-    private function getAllEmployees(): void
+    private function getAllCategories(): void
     {
-        $employees = $this->repository->findAll();
-        AuditResponse::success($employees);
+        $categories = $this->repository->findAll();
+        AuditResponse::success($categories);
     }
 
-    private function getEmployeeById(int $id): void
+    private function getCategoryById(int $id): void
     {
-        $employee = $this->repository->findById($id);
-        if (!$employee) {
-            AuditResponse::error('Employee not found', 404);
+        $category = $this->repository->findById($id);
+        if (!$category) {
+            AuditResponse::error('Category not found', 404);
         }
-        AuditResponse::success($employee);
+        AuditResponse::success($category);
     }
 
-    private function createEmployee(): void
+    private function createCategory(): void
     {
         $data = json_decode(file_get_contents('php://input'), true);
         if (!$data) {
@@ -46,7 +46,7 @@ class EmployeeController
         AuditResponse::created(['id' => $id]);
     }
 
-    private function updateEmployee(?int $id): void
+    private function updateCategory(?int $id): void
     {
         if (!$id) {
             AuditResponse::error('ID is required', 400);
@@ -57,16 +57,16 @@ class EmployeeController
         }
         $ok = $this->repository->update($id, $data);
         $ok ? AuditResponse::success(['updated' => true])
-            : AuditResponse::error('Employee not found', 404);
+            : AuditResponse::error('Category not found', 404);
     }
 
-    private function deleteEmployee(?int $id): void
+    private function deleteCategory(?int $id): void
     {
         if (!$id) {
             AuditResponse::error('ID is required', 400);
         }
         $ok = $this->repository->delete($id);
         $ok ? AuditResponse::success(['deleted' => true])
-            : AuditResponse::error('Employee not found', 404);
+            : AuditResponse::error('Category not found', 404);
     }
 }
