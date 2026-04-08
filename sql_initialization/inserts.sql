@@ -1,3 +1,5 @@
+SET NAMES utf8mb4;
+
 -- 1. Заполняем категории (20 записей)
 INSERT INTO category (name, rate)
 VALUES ('Старший аудитор', 3500.00),        -- 1 (Для задания 9)

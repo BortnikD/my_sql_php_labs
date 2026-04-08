@@ -4,13 +4,51 @@ services:
     container_name: audit_db
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: mysql
+      MYSQL_DATABASE: audit_db
       MYSQL_USER: mysql
       MYSQL_PASSWORD: mysql
     ports:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./sql_initialization/ddl.sql:/docker-entrypoint-initdb.d/01_ddl.sql
+      - ./sql_initialization/inserts.sql:/docker-entrypoint-initdb.d/02_inserts.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "mysql", "-pmysql"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  audit_api:
+    build:
+      context: ./docker/php
+    container_name: audit_api
+    ports:
+      - "8080:80"
+    volumes:
+      - ./audit:/var/www/html
+      - ./docker/php/vhost.conf:/etc/apache2/sites-available/000-default.conf
+    depends_on:
+      audit_db:
+        condition: service_healthy
+
+  audit_ui:
+    image: node:20-alpine
+    container_name: audit_ui
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./web-ui:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - HOSTNAME=0.0.0.0
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+    command: sh -c "npm install && npm run dev"
+    depends_on:
+      - audit_api
 
 volumes:
   mysql_data:
