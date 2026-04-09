@@ -1,26 +1,70 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-base:      #0f1117;
+  --bg-surface:   #1a1d27;
+  --bg-elevated:  #222635;
+  --border:       #2e3248;
+  --text-primary: #e8eaf0;
+  --text-muted:   #6b7280;
+  --accent:       #4f8ef7;
+  --accent-hover: #3b7de8;
+  --danger:       #ef4444;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg-base:     var(--bg-base);
+  --color-bg-surface:  var(--bg-surface);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-border:      var(--border);
+  --color-primary:     var(--text-primary);
+  --color-muted:       var(--text-muted);
+  --color-accent:      var(--accent);
+  --color-accent-hover:var(--accent-hover);
+  --color-danger:      var(--danger);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  thead {
+    background: var(--bg-elevated);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  th, td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    background: var(--bg-surface);
+    transition: background 0.15s;
+  }
+
+  tbody tr:hover {
+    background: var(--bg-elevated);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }

@@ -28,4 +28,6 @@ class EmployeeClient {
     }
 }
 
-export default new EmployeeClient()
+const employeeClient = new EmployeeClient();
+
+export default employeeClient
