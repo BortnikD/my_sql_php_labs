@@ -9,6 +9,7 @@ import {FieldDef} from '@/lib/FieldDef'
 const fields: FieldDef<Category>[] = [
     {key: 'id', label: 'ID', readonly: true},
     {key: 'name', label: 'Название'},
+    {key: "rate", label: 'Ставка', type: 'number'},
     {key: 'created_at', label: 'Создан', readonly: true},
     {key: 'updated_at', label: 'Обновлён', readonly: true},
 ]

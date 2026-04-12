@@ -9,6 +9,10 @@ import {FieldDef} from '@/lib/FieldDef'
 const fields: FieldDef<Job>[] = [
     {key: 'id', label: 'ID', readonly: true},
     {key: 'name', label: 'Название'},
+    {key: 'company_name', label: 'Название компании'},
+    {key: 'is_completed', label: 'Статус выполнения'},
+    {key: 'start_at', label: 'Дата начала выполнения'},
+    {key: 'completed_at', label: 'Дата выполнения'},
     {key: 'created_at', label: 'Создан', readonly: true},
     {key: 'updated_at', label: 'Обновлён', readonly: true},
 ]

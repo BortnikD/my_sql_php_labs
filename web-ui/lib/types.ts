@@ -14,6 +14,7 @@ export interface Employee {
 export interface Category {
     id: number
     name: string
+    rate: number
     is_deleted: boolean
     created_at: string
     updated_at: string
@@ -23,6 +24,10 @@ export interface Category {
 export interface Job {
     id: number
     name: string
+    company_name: string | null
+    is_completed: boolean
+    start_at: string | null
+    completed_at: string | null
     is_deleted: boolean
     created_at: string
     updated_at: string
@@ -36,6 +41,12 @@ export interface ChargeItem {
     hours: number
     completed_at: string
     paid_out: number
+}
+
+export interface ChargesTotal {
+    company_name: string
+    total_hours: number
+    total_sum: number
 }
 
 export interface Timesheet {
