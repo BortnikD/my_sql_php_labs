@@ -1,9 +1,10 @@
 import axiosInstance from '@/lib/axiosInstance'
 import { Employee } from '@/lib/types'
 import { CreateEmployeeDto, UpdateEmployeeDto } from '@/lib/dto'
+import { CrudClient } from '@/lib/CrudClient'
 import { AxiosResponse } from 'axios'
 
-class EmployeeClient {
+class EmployeeClient implements CrudClient<Employee, CreateEmployeeDto, UpdateEmployeeDto> {
 
     private static URL = '/employees'
 
@@ -28,6 +29,5 @@ class EmployeeClient {
     }
 }
 
-const employeeClient = new EmployeeClient();
-
-export default employeeClient
+// eslint-disable-next-line import/no-anonymous-default-export
+export default new EmployeeClient()

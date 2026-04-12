@@ -1,9 +1,10 @@
 import axiosInstance from '@/lib/axiosInstance'
 import { Category } from '@/lib/types'
 import { CreateCategoryDto, UpdateCategoryDto } from '@/lib/dto'
+import { CrudClient } from '@/lib/CrudClient'
 import { AxiosResponse } from 'axios'
 
-class CategoryClient {
+class CategoryClient implements CrudClient<Category, CreateCategoryDto, UpdateCategoryDto> {
 
     private static URL = '/categories'
 
@@ -28,4 +29,5 @@ class CategoryClient {
     }
 }
 
+// eslint-disable-next-line import/no-anonymous-default-export
 export default new CategoryClient()

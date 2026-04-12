@@ -1,9 +1,10 @@
 import axiosInstance from '@/lib/axiosInstance'
 import { Timesheet } from '@/lib/types'
 import { CreateTimesheetDto, UpdateTimesheetDto } from '@/lib/dto'
+import { CrudClient } from '@/lib/CrudClient'
 import { AxiosResponse } from 'axios'
 
-class TimesheetClient {
+class TimesheetClient implements CrudClient<Timesheet, CreateTimesheetDto, UpdateTimesheetDto> {
 
     private static URL = '/timesheets'
 
@@ -36,4 +37,5 @@ class TimesheetClient {
     }
 }
 
+// eslint-disable-next-line import/no-anonymous-default-export
 export default new TimesheetClient()

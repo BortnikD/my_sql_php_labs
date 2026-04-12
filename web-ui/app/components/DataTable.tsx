@@ -1,54 +1,64 @@
 'use client'
 
-import {useState} from 'react'
-import {Employee} from '@/lib/types'
-import {UpdateEmployeeDto} from '@/lib/dto'
-import employeeClient from '@/lib/webclients/EmpoyeeClient'
-import ConfirmModal from '@/app/components/ConfirmModal'
-import UpdateEmployeeModal from "@/app/employees/UpdateEmployeeModal";
-import CreateEmployeeModal from "@/app/employees/CreateEmployeeModal";
-import {CreateEmployeeDto} from "@/lib/dto";
+import {useEffect, useState} from 'react'
+import {CrudClient} from '@/lib/CrudClient'
+import {FieldDef} from '@/lib/FieldDef'
+import ConfirmModal from './ConfirmModal'
+import EntityModal from './EntityModal'
 
-interface Props {
-    employees: Employee[]
-    onDeleted: (id: number) => void
-    onUpdated: () => void
-    onCreated: () => void
+interface Props<T extends { id: number }, CreateDto, UpdateDto> {
+    title: string
+    client: CrudClient<T, CreateDto, UpdateDto>
+    fields: FieldDef<T>[]
 }
 
-export default function EmployeeTable({employees, onDeleted, onUpdated, onCreated}: Props) {
+export default function DataTable<T extends { id: number }, CreateDto, UpdateDto>({
+                                                                                      title,
+                                                                                      client,
+                                                                                      fields,
+                                                                                  }: Props<T, CreateDto, UpdateDto>) {
 
+    const [data, setData] = useState<T[]>([])
     const [deletePendingId, setDeletePendingId] = useState<number | null>(null)
-    const [editEmployee, setEditEmployee] = useState<Employee | null>(null)
+    const [editItem, setEditItem] = useState<T | null>(null)
     const [showCreate, setShowCreate] = useState(false)
 
-    const handleCreate = (dto: CreateEmployeeDto) => {
-        employeeClient.create(dto).then(() => {
-            onCreated()
-            setShowCreate(false)
-        })
+    const fetchAll = () => {
+        client.getAll().then(res => setData(res.data))
     }
+
+    useEffect(() => {
+        fetchAll()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     const handleDelete = () => {
         if (deletePendingId === null) return
-        employeeClient.delete(deletePendingId).then(() => {
-            onDeleted(deletePendingId)
+        client.delete(deletePendingId).then(() => {
+            setData(prev => prev.filter(item => item.id !== deletePendingId))
             setDeletePendingId(null)
         })
     }
 
-    const handleUpdate = (dto: UpdateEmployeeDto) => {
-        if (editEmployee === null) return
-        employeeClient.update(editEmployee.id, dto).then(() => {
-            onUpdated()
-            setEditEmployee(null)
+    const handleUpdate = (dto: UpdateDto) => {
+        if (editItem === null) return
+        client.update(editItem.id, dto).then(() => {
+            fetchAll()
+            setEditItem(null)
+        })
+    }
+
+    const handleCreate = (dto: CreateDto) => {
+        client.create(dto).then(() => {
+            fetchAll()
+            setShowCreate(false)
         })
     }
 
     return (
         <div>
             <div className="flex items-center justify-between mb-4">
-                <h1 className="text-2xl font-bold">Работники</h1>
+                <h1 className="text-2xl font-bold">{title}</h1>
                 <button
                     onClick={() => setShowCreate(true)}
                     className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-accent text-white hover:bg-accent-hover transition"
@@ -61,36 +71,25 @@ export default function EmployeeTable({employees, onDeleted, onUpdated, onCreate
                     Добавить
                 </button>
             </div>
+
             <div className="overflow-x-auto rounded-xl shadow">
                 <table>
                     <thead>
                     <tr>
-                        <th>id</th>
-                        <th>category_id</th>
-                        <th>first_name</th>
-                        <th>last_name</th>
-                        <th>middle_name</th>
-                        <th>birth_date</th>
-                        <th>created_at</th>
-                        <th>updated_at</th>
+                        {fields.map(f => <th key={String(f.key)}>{f.label}</th>)}
                         <th className="sticky right-0 bg-bg-elevated w-16"></th>
                     </tr>
                     </thead>
                     <tbody>
-                    {employees.map(emp => (
-                        <tr key={emp.id} className="group">
-                            <td>{emp.id}</td>
-                            <td>{emp.category_id}</td>
-                            <td>{emp.first_name}</td>
-                            <td>{emp.last_name}</td>
-                            <td>{emp.middle_name ?? '—'}</td>
-                            <td>{emp.birth_date}</td>
-                            <td>{emp.created_at}</td>
-                            <td>{emp.updated_at}</td>
+                    {data.map(item => (
+                        <tr key={item.id} className="group">
+                            {fields.map(f => (
+                                <td key={String(f.key)}>{String(item[f.key] ?? '—')}</td>
+                            ))}
                             <td className="sticky right-0 bg-bg-surface group-hover:bg-bg-elevated">
                                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
                                     <button
-                                        onClick={() => setEditEmployee(emp)}
+                                        onClick={() => setEditItem(item)}
                                         className="text-accent hover:text-accent-hover transition"
                                         title="Редактировать"
                                     >
@@ -102,7 +101,7 @@ export default function EmployeeTable({employees, onDeleted, onUpdated, onCreate
                                         </svg>
                                     </button>
                                     <button
-                                        onClick={() => setDeletePendingId(emp.id)}
+                                        onClick={() => setDeletePendingId(item.id)}
                                         className="text-danger hover:text-red-400 transition"
                                         title="Удалить"
                                     >
@@ -126,24 +125,29 @@ export default function EmployeeTable({employees, onDeleted, onUpdated, onCreate
 
             {deletePendingId !== null && (
                 <ConfirmModal
-                    message={`Удалить сотрудника #${deletePendingId}?`}
+                    message={`Удалить запись #${deletePendingId}?`}
                     onConfirm={handleDelete}
                     onCancel={() => setDeletePendingId(null)}
                 />
             )}
 
             {showCreate && (
-                <CreateEmployeeModal
+                <EntityModal<T, CreateDto>
+                    title="Создать"
+                    fields={fields}
+                    initialValues={{}}
                     onConfirm={handleCreate}
                     onCancel={() => setShowCreate(false)}
                 />
             )}
 
-            {editEmployee !== null && (
-                <UpdateEmployeeModal
-                    employee={editEmployee}
+            {editItem !== null && (
+                <EntityModal<T, UpdateDto>
+                    title={`Редактировать #${editItem.id}`}
+                    fields={fields}
+                    initialValues={editItem}
                     onConfirm={handleUpdate}
-                    onCancel={() => setEditEmployee(null)}
+                    onCancel={() => setEditItem(null)}
                 />
             )}
         </div>

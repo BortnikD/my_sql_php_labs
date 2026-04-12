@@ -15,6 +15,7 @@ export interface Category {
     id: number
     name: string
     is_deleted: boolean
+    created_at: string
     updated_at: string
     deleted_at: string | null
 }
@@ -23,6 +24,7 @@ export interface Job {
     id: number
     name: string
     is_deleted: boolean
+    created_at: string
     updated_at: string
     deleted_at: string | null
 }
@@ -33,6 +35,7 @@ export interface Timesheet {
     job_id: number
     hours: number
     is_deleted: boolean
+    created_at: string
     updated_at: string
     deleted_at: string | null
 }

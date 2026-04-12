@@ -1,36 +1,30 @@
 'use client'
 
-import {useEffect, useState} from "react";
-import employeeClient from "@/lib/webclients/EmpoyeeClient";
-import {Employee} from "@/lib/types";
-import EmployeeTable from "@/app/employees/EmployeeTable";
+import DataTable from '@/app/components/DataTable'
+import employeeClient from '@/lib/webclients/EmpoyeeClient'
+import {Employee} from '@/lib/types'
+import {CreateEmployeeDto, UpdateEmployeeDto} from '@/lib/dto'
+import {FieldDef} from '@/lib/FieldDef'
+
+const fields: FieldDef<Employee>[] = [
+    {key: 'id', label: 'ID', readonly: true},
+    {key: 'category_id', label: 'Category ID', type: 'number'},
+    {key: 'first_name', label: 'Имя'},
+    {key: 'last_name', label: 'Фамилия'},
+    {key: 'middle_name', label: 'Отчество'},
+    {key: 'birth_date', label: 'Дата рождения', type: 'date'},
+    {key: 'created_at', label: 'Создан', readonly: true},
+    {key: 'updated_at', label: 'Обновлён', readonly: true},
+]
 
 export default function Employees() {
-
-    const [employees, setEmployees] = useState<Employee[]>([])
-
-    useEffect(() => {
-        employeeClient.getAll()
-            .then(it => setEmployees(it.data));
-    }, []);
-
-    const handleDeleted = (id: number) => {
-        setEmployees(prev => prev.filter(e => e.id !== id))
-    }
-
-    const handleUpdated = () => {
-        employeeClient.getAll()
-            .then(it => setEmployees(it.data));
-    }
-
-    const handleCreated = () => {
-        employeeClient.getAll()
-            .then(it => setEmployees(it.data));
-    }
-
     return (
         <div className="p-6">
-            <EmployeeTable employees={employees} onDeleted={handleDeleted} onUpdated={handleUpdated} onCreated={handleCreated}/>
+            <DataTable<Employee, CreateEmployeeDto, UpdateEmployeeDto>
+                title="Работники"
+                client={employeeClient}
+                fields={fields}
+            />
         </div>
-    );
+    )
 }
