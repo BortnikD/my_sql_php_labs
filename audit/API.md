@@ -218,18 +218,22 @@ Soft-delete записи табеля.
 
 ## Charges `/charges`
 
-### GET /charges
-Получить ведомость начислений — только по завершённым работам (`is_completed = TRUE`).
+Оба эндпоинта требуют обязательные query-параметры: `company_name` и `year`.
+
+### GET /charges?company_name={name}&year={year}
+Получить детальную ведомость начислений по предприятию за год.
+
+**Пример:** `GET /charges?company_name=ООО Ромашка&year=2026`
 
 **Ответ 200:**
 ```json
 [
   {
     "full_name": "И.И.Иванов",
-    "name": "Разработчики",
+    "category_name": "Разработчики",
     "rate": 1000,
+    "completed_at": "2026-03-15T00:00:00",
     "hours": 8,
-    "completed_at": "2024-01-15T00:00:00",
     "paid_out": 8000
   }
 ]
@@ -238,8 +242,47 @@ Soft-delete записи табеля.
 | Поле | Описание |
 |------|----------|
 | `full_name` | Инициалы + фамилия сотрудника |
-| `name` | Название категории |
+| `category_name` | Название категории |
 | `rate` | Ставка категории |
-| `hours` | Часы из табеля |
 | `completed_at` | Дата завершения работы |
+| `hours` | Часы из табеля |
 | `paid_out` | Итого (`rate * hours`) |
+
+**Ответ 400:** `{ "error": "Query params company_name and year are required" }`
+
+---
+
+### GET /charges/total?company_name={name}&year={year}
+Получить итоговую сумму и часы по конкретному предприятию за год.
+
+**Пример:** `GET /charges/total?company_name=ООО Ромашка&year=2026`
+
+**Ответ 200:**
+```json
+[
+  {
+    "company_name": "ООО Ромашка",
+    "total_hours": 320,
+    "total_sum": 640000
+  }
+]
+```
+
+**Ответ 400:** `{ "error": "Query param company_name is required" }`
+
+---
+
+### GET /charges/total-by-year?year={year}
+Получить итоговую сумму и часы по **всем** предприятиям за год.
+
+**Пример:** `GET /charges/total-by-year?year=2026`
+
+**Ответ 200:**
+```json
+[
+  { "company_name": "ООО Ромашка", "total_hours": 320, "total_sum": 640000 },
+  { "company_name": "ЗАО Лютик",   "total_hours": 160, "total_sum": 280000 }
+]
+```
+
+**Ответ 400:** `{ "error": "Query param year is required" }`

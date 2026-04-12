@@ -11,6 +11,8 @@ require_once __DIR__ . '/src/controller/CategoryController.php';
 require_once __DIR__ . '/src/controller/EmployeeController.php';
 require_once __DIR__ . '/src/controller/JobController.php';
 require_once __DIR__ . '/src/controller/TimesheetController.php';
+require_once __DIR__ . '/src/repository/ChargesRepository.php';
+require_once __DIR__ . '/src/controller/ChargesController.php';
 
 Cors::handle();
 
@@ -22,13 +24,14 @@ $path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
 $parts = explode('/', $path);
 
 $resource = $parts[0] ?? null;
-$id = isset($parts[1]) && $parts[1] !== '' ? (int)$parts[1] : null;
+$sub = isset($parts[1]) && $parts[1] !== '' ? $parts[1] : null;
+$id = ($sub && is_numeric($sub)) ? (int)$sub : null;
 
 match ($resource) {
     'employees' => (new EmployeeController($pdo))->handle($method, $id),
     'categories' => (new CategoryController($pdo))->handle($method, $id),
     'jobs' => (new JobController($pdo))->handle($method, $id),
     'timesheets' => (new TimesheetController($pdo))->handle($method, $id, $query),
-    'charges' => (new TimesheetController($pdo))->handleCharges(),
+    'charges' => (new ChargesController($pdo))->handle($method, $sub, $query),
     default => AuditResponse::error('Not Found', 404),
 };

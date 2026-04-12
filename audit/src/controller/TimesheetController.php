@@ -21,12 +21,6 @@ class TimesheetController
         };
     }
 
-    public function handleCharges(): void
-    {
-        $data = $this->repository->getStatementOfCharges();
-        AuditResponse::success($data);
-    }
-
     private function handleGet(?int $id, array $query): void
     {
         if ($id) {
