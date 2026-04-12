@@ -29,5 +29,6 @@ match ($resource) {
     'categories' => (new CategoryController($pdo))->handle($method, $id),
     'jobs' => (new JobController($pdo))->handle($method, $id),
     'timesheets' => (new TimesheetController($pdo))->handle($method, $id, $query),
+    'charges' => (new TimesheetController($pdo))->handleCharges(),
     default => AuditResponse::error('Not Found', 404),
 };

@@ -231,6 +231,26 @@
         }
       }
     },
+    "/charges": {
+      "get": {
+        "summary": "Ведомость начислений",
+        "description": "Возвращает начисления по завершённым работам (is_completed = TRUE)",
+        "tags": ["Charges"],
+        "responses": {
+          "200": {
+            "description": "Список начислений",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ChargeItem" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/timesheets/{id}": {
       "parameters": [{ "$ref": "#/components/parameters/id" }],
       "get": {
@@ -353,6 +373,17 @@
           "employee_id": { "type": "integer" },
           "job_id":      { "type": "integer" },
           "hours":       { "type": "number" }
+        }
+      },
+      "ChargeItem": {
+        "type": "object",
+        "properties": {
+          "full_name":    { "type": "string", "example": "И.И.Иванов" },
+          "name":         { "type": "string", "description": "Название категории" },
+          "rate":         { "type": "number", "description": "Ставка категории" },
+          "hours":        { "type": "number", "description": "Часы из табеля" },
+          "completed_at": { "type": "string", "format": "date-time", "description": "Дата завершения работы" },
+          "paid_out":     { "type": "number", "description": "Итого (rate * hours)" }
         }
       },
       "CreatedResponse": {

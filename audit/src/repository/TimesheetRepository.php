@@ -77,6 +77,28 @@ readonly class TimesheetRepository
         ]);
     }
 
+    public function getStatementOfCharges(): array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT CONCAT(SUBSTRING(e.first_name, 1, 1), '.', COALESCE(SUBSTRING(e.middle_name, 1, 1), ''), '.',
+                          e.last_name) AS full_name,
+                   c.name              AS category_name,
+                   c.rate,
+                   j.completed_at,
+                   t.hours,
+                   c.rate * t.hours    AS paid_out
+            FROM employee e
+                     JOIN category c ON e.category_id = c.id
+                     JOIN timesheet t ON e.id = t.employee_id
+                     JOIN job j ON t.job_id = j.id
+            WHERE e.is_deleted = FALSE
+              AND t.is_deleted = FALSE
+              AND j.is_completed = TRUE
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
     public function delete(int $id): bool
     {
         $stmt = $this->pdo->prepare('
