@@ -84,7 +84,7 @@ export default function DataTable<T extends { id: number }, CreateDto, UpdateDto
                     {data.map(item => (
                         <tr key={item.id} className="group">
                             {fields.map(f => (
-                                <td key={String(f.key)}>{String(item[f.key] ?? '—')}</td>
+                                <td key={String(f.key)}>{String(item[f.key] ?? '-')}</td>
                             ))}
                             <td className="sticky right-0 bg-bg-surface group-hover:bg-bg-elevated">
                                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">

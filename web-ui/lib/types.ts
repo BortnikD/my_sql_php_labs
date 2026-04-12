@@ -29,6 +29,15 @@ export interface Job {
     deleted_at: string | null
 }
 
+export interface ChargeItem {
+    full_name: string
+    category_name: string
+    rate: number
+    hours: number
+    completed_at: string
+    paid_out: number
+}
+
 export interface Timesheet {
     id: number
     employee_id: number
