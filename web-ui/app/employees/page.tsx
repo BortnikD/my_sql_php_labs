@@ -18,9 +18,19 @@ export default function Employees() {
         setEmployees(prev => prev.filter(e => e.id !== id))
     }
 
+    const handleUpdated = () => {
+        employeeClient.getAll()
+            .then(it => setEmployees(it.data));
+    }
+
+    const handleCreated = () => {
+        employeeClient.getAll()
+            .then(it => setEmployees(it.data));
+    }
+
     return (
         <div className="p-6">
-            <EmployeeTable employees={employees} onDeleted={handleDeleted}/>
+            <EmployeeTable employees={employees} onDeleted={handleDeleted} onUpdated={handleUpdated} onCreated={handleCreated}/>
         </div>
     );
 }
