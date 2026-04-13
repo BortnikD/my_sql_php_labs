@@ -2,18 +2,20 @@
 
 import DataTable from '@/app/components/DataTable'
 import employeeClient from '@/lib/webclients/EmployeeClient'
+import categoryClient from '@/lib/webclients/CategoryClient'
 import {Employee} from '@/lib/types'
 import {CreateEmployeeDto, UpdateEmployeeDto} from '@/lib/dto'
 import {FieldDef} from '@/lib/FieldDef'
-import categoryClient from "@/lib/webclients/CategoryClient";
 
 const fields: FieldDef<Employee>[] = [
     {key: 'id', label: 'ID', readonly: true},
     {
-        key: 'category_id', label: 'Category ID', type: 'number', validations: [
-            {predicate: v => v !== '' && v !== null && v !== undefined, message: 'Поле обязательно'},
-            {predicate: v => Number.isInteger(Number(v)) && Number(v) > 0, message: 'Должно быть целым числом > 0'},
-            {predicate: v => categoryClient.existsById(Number(v)), message: 'Указанной категории не существует'},
+        key: 'category_id', label: 'Категория',
+        relation: {
+            fetchOptions: () => categoryClient.getAll().then(r => r.data.map(c => ({id: c.id, title: c.name})))
+        },
+        validations: [
+            {predicate: v => !!v && v !== '', message: 'Выберите категорию'},
         ]
     },
     {

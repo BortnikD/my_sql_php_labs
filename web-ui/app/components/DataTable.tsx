@@ -2,7 +2,7 @@
 
 import {useEffect, useState} from 'react'
 import {CrudClient} from '@/lib/CrudClient'
-import {FieldDef} from '@/lib/FieldDef'
+import {FieldDef, RelationOption} from '@/lib/FieldDef'
 import ConfirmModal from './ConfirmModal'
 import EntityModal from './EntityModal'
 
@@ -22,6 +22,7 @@ export default function DataTable<T extends { id: number }, CreateDto, UpdateDto
     const [deletePendingId, setDeletePendingId] = useState<number | null>(null)
     const [editItem, setEditItem] = useState<T | null>(null)
     const [showCreate, setShowCreate] = useState(false)
+    const [relationOptions, setRelationOptions] = useState<Record<string, RelationOption[]>>({})
 
     const fetchAll = () => {
         client.getAll().then(res => setData(res.data))
@@ -29,6 +30,18 @@ export default function DataTable<T extends { id: number }, CreateDto, UpdateDto
 
     useEffect(() => {
         fetchAll()
+        const relationFields = fields.filter(f => f.relation)
+        Promise.all(
+            relationFields.map(field =>
+                field.relation!.fetchOptions().then(options => ({key: String(field.key), options: options}))
+            )
+        ).then(results => {
+            const map: Record<string, RelationOption[]> = {}
+            results.forEach(({key, options}) => {
+                map[key] = options
+            })
+            setRelationOptions(map)
+        })
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
@@ -53,6 +66,15 @@ export default function DataTable<T extends { id: number }, CreateDto, UpdateDto
             fetchAll()
             setShowCreate(false)
         })
+    }
+
+    const displayValue = (field: FieldDef<T>, item: T): string => {
+        const raw = item[field.key]
+        if (field.relation) {
+            const options = relationOptions[String(field.key)] ?? []
+            return options.find(o => o.id === raw)?.title ?? String(raw ?? '-')
+        }
+        return String(raw ?? '-')
     }
 
     return (
@@ -84,7 +106,7 @@ export default function DataTable<T extends { id: number }, CreateDto, UpdateDto
                     {data.map(item => (
                         <tr key={item.id} className="group">
                             {fields.map(f => (
-                                <td key={String(f.key)}>{String(item[f.key] ?? '-')}</td>
+                                <td key={String(f.key)}>{displayValue(f, item)}</td>
                             ))}
                             <td className="sticky right-0 bg-bg-surface group-hover:bg-bg-elevated">
                                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">

@@ -2,26 +2,33 @@
 
 import DataTable from '@/app/components/DataTable'
 import timesheetClient from '@/lib/webclients/TimesheetClient'
+import employeeClient from '@/lib/webclients/EmployeeClient'
+import jobClient from '@/lib/webclients/JobClient'
 import {Timesheet} from '@/lib/types'
 import {CreateTimesheetDto, UpdateTimesheetDto} from '@/lib/dto'
 import {FieldDef} from '@/lib/FieldDef'
-import employeeClient from "@/lib/webclients/EmployeeClient";
-import jobClient from "@/lib/webclients/JobClient";
 
 const fields: FieldDef<Timesheet>[] = [
     {key: 'id', label: 'ID', readonly: true},
     {
-        key: 'employee_id', label: 'Employee ID', type: 'number', validations: [
-            {predicate: v => v !== '' && v !== null && v !== undefined, message: 'Поле обязательно'},
-            {predicate: v => Number.isInteger(Number(v)) && Number(v) > 0, message: 'Должно быть целым числом > 0'},
-            {predicate: v => employeeClient.existsById(Number(v)), message: 'Сотрудника с таким id не существует'},
+        key: 'employee_id', label: 'Сотрудник',
+        relation: {
+            fetchOptions: () => employeeClient.getAll().then(r => r.data.map(e => ({
+                id: e.id,
+                title: `${e.last_name} ${e.first_name}${e.middle_name ? ' ' + e.middle_name : ''}`
+            })))
+        },
+        validations: [
+            {predicate: v => !!v && v !== '', message: 'Выберите сотрудника'},
         ]
     },
     {
-        key: 'job_id', label: 'Job ID', type: 'number', validations: [
-            {predicate: v => v !== '' && v !== null && v !== undefined, message: 'Поле обязательно'},
-            {predicate: v => Number.isInteger(Number(v)) && Number(v) > 0, message: 'Должно быть целым числом > 0'},
-            {predicate: v => jobClient.existsById(Number(v)), message: 'Работы с таким id не существует'},
+        key: 'job_id', label: 'Работа',
+        relation: {
+            fetchOptions: () => jobClient.getAll().then(r => r.data.map(j => ({id: j.id, title: j.name})))
+        },
+        validations: [
+            {predicate: v => !!v && v !== '', message: 'Выберите работу'},
         ]
     },
     {

@@ -1,7 +1,7 @@
 'use client'
 
-import {useState} from 'react'
-import {FieldDef} from '@/lib/FieldDef'
+import {useEffect, useState} from 'react'
+import {FieldDef, RelationOption} from '@/lib/FieldDef'
 
 interface Props<T, Dto> {
     title: string
@@ -21,12 +21,29 @@ export default function EntityModal<T, Dto>({title, fields, initialValues, onCon
             const val = initialValues[f.key]
             init[String(f.key)] = val !== undefined && val !== null
                 ? (val as string | number)
-                : (f.type === 'number' ? 0 : '')
+                : (f.relation ? '' : f.type === 'number' ? 0 : '')
         })
         return init
     })
 
     const [errors, setErrors] = useState<Record<string, string>>({})
+    const [relationOptions, setRelationOptions] = useState<Record<string, RelationOption[]>>({})
+
+    useEffect(() => {
+        const relationFields = editableFields.filter(f => f.relation)
+        Promise.all(
+            relationFields.map(f =>
+                f.relation!.fetchOptions().then(opts => ({key: String(f.key), opts}))
+            )
+        ).then(results => {
+            const map: Record<string, RelationOption[]> = {}
+            results.forEach(({key, opts}) => {
+                map[key] = opts
+            })
+            setRelationOptions(map)
+        })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     const set = (key: string, value: string | number) => {
         setForm(prev => ({...prev, [key]: value}))
@@ -64,14 +81,27 @@ export default function EntityModal<T, Dto>({title, fields, initialValues, onCon
                         return (
                             <label key={key} className="flex flex-col gap-1">
                                 <span className="text-xs text-muted uppercase tracking-wide">{f.label}</span>
-                                <input
-                                    className={`modal-input ${errors[key] ? 'border-red-500' : ''}`}
-                                    type={f.type ?? 'text'}
-                                    value={form[key]}
-                                    onChange={e => set(key, f.type === 'number'
-                                        ? Number(e.target.value)
-                                        : e.target.value)}
-                                />
+                                {f.relation ? (
+                                    <select
+                                        className={`modal-input ${errors[key] ? 'border-red-500' : ''}`}
+                                        value={form[key]}
+                                        onChange={e => set(key, Number(e.target.value))}
+                                    >
+                                        <option value="">Выберите из списка</option>
+                                        {(relationOptions[key] ?? []).map(o => (
+                                            <option key={o.id} value={o.id}>{o.title}</option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <input
+                                        className={`modal-input ${errors[key] ? 'border-red-500' : ''}`}
+                                        type={f.type ?? 'text'}
+                                        value={form[key]}
+                                        onChange={e => set(key, f.type === 'number'
+                                            ? Number(e.target.value)
+                                            : e.target.value)}
+                                    />
+                                )}
                                 {errors[key] && (
                                     <span className="text-xs text-red-400">{errors[key]}</span>
                                 )}
