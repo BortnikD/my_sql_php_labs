@@ -16,6 +16,15 @@ class EmployeeClient implements CrudClient<Employee, CreateEmployeeDto, UpdateEm
         return axiosInstance.get(`${EmployeeClient.URL}/${id}`)
     }
 
+    async existsById(id: number): Promise<boolean> {
+        try {
+            const result = await this.getById(id)
+            return result !== null
+        } catch {
+            return false
+        }
+    }
+
     create(dto: CreateEmployeeDto): Promise<AxiosResponse<{ id: number }>> {
         return axiosInstance.post(EmployeeClient.URL, dto)
     }

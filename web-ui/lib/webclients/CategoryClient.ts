@@ -16,6 +16,15 @@ class CategoryClient implements CrudClient<Category, CreateCategoryDto, UpdateCa
         return axiosInstance.get(`${CategoryClient.URL}/${id}`)
     }
 
+    async existsById(id: number): Promise<boolean> {
+        try {
+            const res = await this.getById(id)
+            return res.data !== null
+        } catch {
+            return false
+        }
+    }
+
     create(dto: CreateCategoryDto): Promise<AxiosResponse<{ id: number }>> {
         return axiosInstance.post(CategoryClient.URL, dto)
     }

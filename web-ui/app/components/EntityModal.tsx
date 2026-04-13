@@ -19,13 +19,38 @@ export default function EntityModal<T, Dto>({title, fields, initialValues, onCon
         const init: Record<string, string | number> = {}
         editableFields.forEach(f => {
             const val = initialValues[f.key]
-            init[String(f.key)] = val !== undefined && val !== null ? (val as string | number) : (f.type === 'number' ? 0 : '')
+            init[String(f.key)] = val !== undefined && val !== null
+                ? (val as string | number)
+                : (f.type === 'number' ? 0 : '')
         })
         return init
     })
 
+    const [errors, setErrors] = useState<Record<string, string>>({})
+
     const set = (key: string, value: string | number) => {
         setForm(prev => ({...prev, [key]: value}))
+        setErrors(prev => ({...prev, [key]: ''}))
+    }
+
+    const validate = async (): Promise<boolean> => {
+        const newErrors: Record<string, string> = {}
+        for (const field of editableFields) {
+            const key = String(field.key)
+            for (const rule of field.validations ?? []) {
+                const isValid = await rule.predicate(form[key])
+                if (!isValid) {
+                    newErrors[key] = rule.message
+                    break
+                }
+            }
+        }
+        setErrors(newErrors)
+        return Object.keys(newErrors).length === 0
+    }
+
+    const handleConfirm = async () => {
+        if (await validate()) onConfirm(form as Dto)
     }
 
     return (
@@ -34,17 +59,25 @@ export default function EntityModal<T, Dto>({title, fields, initialValues, onCon
                 <h2 className="text-primary font-semibold">{title}</h2>
 
                 <div className="flex flex-col gap-3">
-                    {editableFields.map(f => (
-                        <label key={String(f.key)} className="flex flex-col gap-1">
-                            <span className="text-xs text-muted uppercase tracking-wide">{f.label}</span>
-                            <input
-                                className="modal-input"
-                                type={f.type ?? 'text'}
-                                value={form[String(f.key)]}
-                                onChange={e => set(String(f.key), f.type === 'number' ? Number(e.target.value) : e.target.value)}
-                            />
-                        </label>
-                    ))}
+                    {editableFields.map(f => {
+                        const key = String(f.key)
+                        return (
+                            <label key={key} className="flex flex-col gap-1">
+                                <span className="text-xs text-muted uppercase tracking-wide">{f.label}</span>
+                                <input
+                                    className={`modal-input ${errors[key] ? 'border-red-500' : ''}`}
+                                    type={f.type ?? 'text'}
+                                    value={form[key]}
+                                    onChange={e => set(key, f.type === 'number'
+                                        ? Number(e.target.value)
+                                        : e.target.value)}
+                                />
+                                {errors[key] && (
+                                    <span className="text-xs text-red-400">{errors[key]}</span>
+                                )}
+                            </label>
+                        )
+                    })}
                 </div>
 
                 <div className="flex justify-end gap-2">
@@ -55,7 +88,7 @@ export default function EntityModal<T, Dto>({title, fields, initialValues, onCon
                         Отмена
                     </button>
                     <button
-                        onClick={() => onConfirm(form as Dto)}
+                        onClick={handleConfirm}
                         className="px-4 py-2 rounded-lg text-sm bg-accent text-white hover:bg-accent-hover transition"
                     >
                         Сохранить
