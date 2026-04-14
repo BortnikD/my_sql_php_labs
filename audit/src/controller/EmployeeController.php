@@ -1,72 +1,21 @@
 <?php
 
-class EmployeeController
+class EmployeeController extends CrudController
 {
+    private EmployeeRepository $repo;
 
-    private EmployeeRepository $repository;
-
-    public function __construct(private readonly PDO $pdo)
+    public function __construct(PDO $pdo)
     {
-        $this->repository = new EmployeeRepository($this->pdo);
+        $this->repo = new EmployeeRepository($pdo);
     }
 
-    public function handle(string $method, ?int $id): void
+    protected function repository(): CrudRepository
     {
-        match ($method) {
-            'GET' => $id ? $this->getEmployeeById($id) : $this->getAllEmployees(),
-            'POST' => $this->createEmployee(),
-            'PUT' => $this->updateEmployee($id),
-            'DELETE' => $this->deleteEmployee($id),
-            default => AuditResponse::error('Method Not Allowed', 405),
-        };
+        return $this->repo;
     }
 
-    private function getAllEmployees(): void
+    protected function entityName(): string
     {
-        $employees = $this->repository->findAll();
-        AuditResponse::success($employees);
-    }
-
-    private function getEmployeeById(int $id): void
-    {
-        $employee = $this->repository->findById($id);
-        if (!$employee) {
-            AuditResponse::error('Employee not found', 404);
-        }
-        AuditResponse::success($employee);
-    }
-
-    private function createEmployee(): void
-    {
-        $data = json_decode(file_get_contents('php://input'), true);
-        if (!$data) {
-            AuditResponse::error('Invalid JSON body', 400);
-        }
-        $id = $this->repository->create($data);
-        AuditResponse::created(['id' => $id]);
-    }
-
-    private function updateEmployee(?int $id): void
-    {
-        if (!$id) {
-            AuditResponse::error('ID is required', 400);
-        }
-        $data = json_decode(file_get_contents('php://input'), true);
-        if (!$data) {
-            AuditResponse::error('Invalid JSON body', 400);
-        }
-        $ok = $this->repository->update($id, $data);
-        $ok ? AuditResponse::success(['updated' => true])
-            : AuditResponse::error('Employee not found', 404);
-    }
-
-    private function deleteEmployee(?int $id): void
-    {
-        if (!$id) {
-            AuditResponse::error('ID is required', 400);
-        }
-        $ok = $this->repository->delete($id);
-        $ok ? AuditResponse::success(['deleted' => true])
-            : AuditResponse::error('Employee not found', 404);
+        return 'Employee';
     }
 }

@@ -1,24 +1,25 @@
 <?php
 
-readonly class CategoryRepository
+readonly class CategoryRepository implements CrudRepository
 {
-
     public function __construct(private PDO $pdo)
     {
     }
 
-    public function findById(int $id): array|false
+    public function findById(int $id): ?CategoryDto
     {
         $stmt = $this->pdo->prepare('SELECT * FROM category WHERE id = :id AND is_deleted = FALSE');
         $stmt->execute([':id' => $id]);
-        return $stmt->fetch();
+        $row = $stmt->fetch();
+        return $row ? CategoryDto::fromRow($row) : null;
     }
 
+    /** @return CategoryDto[] */
     public function findAll(): array
     {
         $stmt = $this->pdo->prepare('SELECT * FROM category WHERE is_deleted = FALSE ORDER BY id DESC');
         $stmt->execute();
-        return $stmt->fetchAll();
+        return array_map(CategoryDto::fromRow(...), $stmt->fetchAll());
     }
 
     public function create(array $data): int
@@ -27,12 +28,11 @@ readonly class CategoryRepository
             INSERT INTO category (name, rate)
             VALUES (:name, :rate)
         ');
-
         $stmt->execute([
             ':name' => $data['name'],
             ':rate' => $data['rate'],
         ]);
-        return (int) $this->pdo->lastInsertId();
+        return (int)$this->pdo->lastInsertId();
     }
 
     public function update(int $id, array $data): bool
@@ -44,11 +44,10 @@ readonly class CategoryRepository
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = :id AND is_deleted = FALSE
         ');
-
         return $stmt->execute([
             ':name' => $data['name'],
             ':rate' => $data['rate'],
-            ':id'   => $id,
+            ':id' => $id,
         ]);
     }
 

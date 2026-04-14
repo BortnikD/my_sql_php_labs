@@ -29,14 +29,15 @@ readonly class ChargesRepository
               AND j.completed_at >= :start_of_year AND j.completed_at < :end_of_year
         ");
         $stmt->execute([
-            ':company_name'  => $companyName,
+            ':company_name' => $companyName,
             ':start_of_year' => $year . '-01-01 00:00:00',
-            ':end_of_year'   => ($year + 1) . '-01-01 00:00:00',
+            ':end_of_year' => ($year + 1) . '-01-01 00:00:00',
         ]);
         return $stmt->fetchAll();
     }
 
-    public function getTotalSumAndHoursByCompanyNameAndYear(string $companyName, int $year): array {
+    public function getTotalSumAndHoursByCompanyNameAndYear(string $companyName, int $year): array
+    {
         $stmt = $this->pdo->prepare("
             SELECT j.company_name, SUM(t.hours) as total_hours, SUM(c.rate * t.hours) AS total_sum
             FROM employee e
@@ -51,14 +52,15 @@ readonly class ChargesRepository
             GROUP BY j.company_name
         ");
         $stmt->execute([
-            ':company_name'  => $companyName,
+            ':company_name' => $companyName,
             ':start_of_year' => $year . '-01-01 00:00:00',
-            ':end_of_year'   => ($year + 1) . '-01-01 00:00:00',
+            ':end_of_year' => ($year + 1) . '-01-01 00:00:00',
         ]);
         return $stmt->fetchAll();
     }
 
-    public function getTotalSumAndHoursBydYear(int $year): array {
+    public function getTotalSumAndHoursBydYear(int $year): array
+    {
         $stmt = $this->pdo->prepare("
             SELECT SUM(t.hours) as total_hours, SUM(c.rate * t.hours) AS total_sum
             FROM employee e
@@ -72,7 +74,7 @@ readonly class ChargesRepository
         ");
         $stmt->execute([
             ':start_of_year' => $year . '-01-01 00:00:00',
-            ':end_of_year'   => ($year + 1) . '-01-01 00:00:00',
+            ':end_of_year' => ($year + 1) . '-01-01 00:00:00',
         ]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

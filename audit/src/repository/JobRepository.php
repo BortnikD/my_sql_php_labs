@@ -1,24 +1,25 @@
 <?php
 
-readonly class JobRepository
+readonly class JobRepository implements CrudRepository
 {
-
     public function __construct(private PDO $pdo)
     {
     }
 
-    public function findById(int $id): array|false
+    public function findById(int $id): ?JobDto
     {
         $stmt = $this->pdo->prepare('SELECT * FROM job WHERE id = :id AND is_deleted = FALSE');
         $stmt->execute([':id' => $id]);
-        return $stmt->fetch();
+        $row = $stmt->fetch();
+        return $row ? JobDto::fromRow($row) : null;
     }
 
+    /** @return JobDto[] */
     public function findAll(): array
     {
         $stmt = $this->pdo->prepare('SELECT * FROM job WHERE is_deleted = FALSE ORDER BY id DESC');
         $stmt->execute();
-        return $stmt->fetchAll();
+        return array_map(JobDto::fromRow(...), $stmt->fetchAll());
     }
 
     public function create(array $data): int
@@ -27,7 +28,6 @@ readonly class JobRepository
             INSERT INTO job (name, company_name, start_at)
             VALUES (:name, :company_name, :start_at)
         ');
-
         $stmt->execute([
             ':name' => $data['name'],
             ':company_name' => $data['company_name'],
@@ -48,7 +48,6 @@ readonly class JobRepository
                 updated_at   = CURRENT_TIMESTAMP
             WHERE id = :id AND is_deleted = FALSE
         ');
-
         return $stmt->execute([
             ':name' => $data['name'],
             ':company_name' => $data['company_name'],

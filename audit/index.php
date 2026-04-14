@@ -3,15 +3,21 @@
 require_once __DIR__ . '/src/config/Database.php';
 require_once __DIR__ . '/src/config/Cors.php';
 require_once __DIR__ . '/src/controller/AuditResponse.php';
+require_once __DIR__ . '/src/dto/CategoryDto.php';
+require_once __DIR__ . '/src/dto/EmployeeDto.php';
+require_once __DIR__ . '/src/dto/JobDto.php';
+require_once __DIR__ . '/src/dto/TimesheetDto.php';
+require_once __DIR__ . '/src/repository/CrudRepository.php';
 require_once __DIR__ . '/src/repository/CategoryRepository.php';
 require_once __DIR__ . '/src/repository/EmployeeRepository.php';
 require_once __DIR__ . '/src/repository/JobRepository.php';
 require_once __DIR__ . '/src/repository/TimesheetRepository.php';
+require_once __DIR__ . '/src/repository/ChargesRepository.php';
+require_once __DIR__ . '/src/controller/CrudController.php';
 require_once __DIR__ . '/src/controller/CategoryController.php';
 require_once __DIR__ . '/src/controller/EmployeeController.php';
 require_once __DIR__ . '/src/controller/JobController.php';
 require_once __DIR__ . '/src/controller/TimesheetController.php';
-require_once __DIR__ . '/src/repository/ChargesRepository.php';
 require_once __DIR__ . '/src/controller/ChargesController.php';
 
 Cors::handle();
