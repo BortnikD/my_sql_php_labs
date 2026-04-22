@@ -25,6 +25,7 @@ class ChargesController
         match ($sub) {
             'total' => $this->getTotal($query, $year),
             'total-by-year' => $this->getTotalByYear($year),
+            'statement' => $this->getStatement($year),
             null => $this->getAll($query, $year),
             default => AuditResponse::error('Not Found', 404),
         };
@@ -54,5 +55,10 @@ class ChargesController
     {
         $data = $this->repository->getTotalSumAndHoursBydYear($year);
         AuditResponse::success($data);
+    }
+
+    private function getStatement(int $year): void
+    {
+        AuditResponse::success($this->repository->getStatementByYear($year));
     }
 }

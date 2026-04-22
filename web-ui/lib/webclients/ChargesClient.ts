@@ -1,5 +1,5 @@
 import axiosInstance from '@/lib/axiosInstance'
-import {ChargeItem, ChargesTotal} from '@/lib/types'
+import {ChargeItem, ChargesStatement, ChargesTotal} from '@/lib/types'
 import {AxiosResponse} from 'axios'
 
 class ChargesClient {
@@ -20,6 +20,12 @@ class ChargesClient {
 
     getTotalByYear(year: number): Promise<AxiosResponse<ChargesTotal[]>> {
         return axiosInstance.get(`${ChargesClient.URL}/total-by-year`, {
+            params: {year}
+        })
+    }
+
+    getStatement(year: number): Promise<AxiosResponse<ChargesStatement>> {
+        return axiosInstance.get(`${ChargesClient.URL}/statement`, {
             params: {year}
         })
     }

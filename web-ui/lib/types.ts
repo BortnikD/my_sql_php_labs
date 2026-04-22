@@ -49,6 +49,19 @@ export interface ChargesTotal {
     total_sum: number
 }
 
+export interface CompanyStatement {
+    company_name: string
+    charges: ChargeItem[]
+    total_hours: number
+    total_sum: number
+}
+
+export interface ChargesStatement {
+    companies: CompanyStatement[]
+    total_hours: number
+    total_sum: number
+}
+
 export interface Timesheet {
     id: number
     employee_id: number
