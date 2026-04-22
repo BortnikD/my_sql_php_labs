@@ -74,6 +74,11 @@ export default function DataTable<T extends { id: number }, CreateDto, UpdateDto
             const options = relationOptions[String(field.key)] ?? []
             return options.find(o => o.id === raw)?.title ?? String(raw ?? '-')
         }
+        if (raw != null && String(raw).toLowerCase() === "true") {
+            return "Да"
+        } else if (raw != null && String(raw).toLowerCase() === "false") {
+            return "Нет"
+        }
         return String(raw ?? '-')
     }
 
