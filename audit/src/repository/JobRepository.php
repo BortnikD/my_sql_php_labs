@@ -17,7 +17,7 @@ readonly class JobRepository implements CrudRepository
     /** @return JobDto[] */
     public function findAll(): array
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM job WHERE is_deleted = FALSE ORDER BY id DESC');
+        $stmt = $this->pdo->prepare('SELECT * FROM job WHERE is_deleted = FALSE ORDER BY id');
         $stmt->execute();
         return array_map(JobDto::fromRow(...), $stmt->fetchAll());
     }

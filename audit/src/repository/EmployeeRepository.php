@@ -17,7 +17,7 @@ readonly class EmployeeRepository implements CrudRepository
     /** @return EmployeeDto[] */
     public function findAll(): array
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM employee WHERE is_deleted = FALSE ORDER BY id DESC');
+        $stmt = $this->pdo->prepare('SELECT * FROM employee WHERE is_deleted = FALSE ORDER BY id');
         $stmt->execute();
         return array_map(EmployeeDto::fromRow(...), $stmt->fetchAll());
     }

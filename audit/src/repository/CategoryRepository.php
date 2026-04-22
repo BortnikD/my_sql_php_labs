@@ -17,7 +17,7 @@ readonly class CategoryRepository implements CrudRepository
     /** @return CategoryDto[] */
     public function findAll(): array
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM category WHERE is_deleted = FALSE ORDER BY id DESC');
+        $stmt = $this->pdo->prepare('SELECT * FROM category WHERE is_deleted = FALSE ORDER BY id');
         $stmt->execute();
         return array_map(CategoryDto::fromRow(...), $stmt->fetchAll());
     }

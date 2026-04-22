@@ -17,7 +17,7 @@ readonly class TimesheetRepository implements CrudRepository
     /** @return TimesheetDto[] */
     public function findAll(): array
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM timesheet WHERE is_deleted = FALSE ORDER BY id DESC');
+        $stmt = $this->pdo->prepare('SELECT * FROM timesheet WHERE is_deleted = FALSE ORDER BY id');
         $stmt->execute();
         return array_map(TimesheetDto::fromRow(...), $stmt->fetchAll());
     }
