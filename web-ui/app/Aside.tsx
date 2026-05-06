@@ -1,5 +1,7 @@
-import React from "react";
-import Link from "next/link";
+'use client'
+import React from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 const links = [
     {
@@ -64,10 +66,17 @@ const links = [
 ]
 
 export default function Aside(): React.JSX.Element {
+    const router = useRouter()
+
+    const logout = () => {
+        localStorage.removeItem('token')
+        router.push('/auth')
+    }
+
     return (
-        <aside className="flex flex-col bg-bg-surface border-r border-border w-52 min-h-screen p-4 gap-6">
+        <aside className="flex flex-col bg-bg-surface border-r border-border w-52 h-screen sticky top-0 p-4 gap-6">
             <h2 className="text-primary font-bold text-lg">Audit</h2>
-            <ul className="flex flex-col gap-1">
+            <ul className="flex flex-col gap-1 flex-1">
                 {links.map(link => (
                     <li key={link.href}>
                         <Link
@@ -80,6 +89,17 @@ export default function Aside(): React.JSX.Element {
                     </li>
                 ))}
             </ul>
+            <button
+                onClick={logout}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted hover:bg-bg-elevated hover:text-danger transition"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Выйти
+            </button>
         </aside>
     )
 }

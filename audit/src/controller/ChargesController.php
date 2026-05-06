@@ -2,31 +2,30 @@
 
 class ChargesController
 {
-
     private ChargesRepository $repository;
 
-    public function __construct(private readonly PDO $pdo)
+    public function __construct(PDO $pdo)
     {
-        $this->repository = new ChargesRepository($this->pdo);
+        $this->repository = new ChargesRepository($pdo);
     }
 
-    public function handle(string $method, ?string $sub, array $query): void
+    public function handle(Request $request): void
     {
-        if ($method !== 'GET') {
+        if ($request->method !== 'GET') {
             AuditResponse::error('Method Not Allowed', 405);
         }
 
-        $year = isset($query['year']) ? (int)$query['year'] : null;
+        $year = isset($request->query['year']) ? (int)$request->query['year'] : null;
 
         if (!$year) {
             AuditResponse::error('Query param year is required', 400);
         }
 
-        match ($sub) {
-            'total' => $this->getTotal($query, $year),
+        match ($request->sub) {
+            'total' => $this->getTotal($request->query, $year),
             'total-by-year' => $this->getTotalByYear($year),
             'statement' => $this->getStatement($year),
-            null => $this->getAll($query, $year),
+            null => $this->getAll($request->query, $year),
             default => AuditResponse::error('Not Found', 404),
         };
     }
@@ -37,8 +36,7 @@ class ChargesController
         if (!$companyName) {
             AuditResponse::error('Query param company_name is required', 400);
         }
-        $data = $this->repository->getAllByCompanyNameAndYear($companyName, $year);
-        AuditResponse::success($data);
+        AuditResponse::success($this->repository->getAllByCompanyNameAndYear($companyName, $year));
     }
 
     private function getTotal(array $query, int $year): void
@@ -47,14 +45,12 @@ class ChargesController
         if (!$companyName) {
             AuditResponse::error('Query param company_name is required', 400);
         }
-        $data = $this->repository->getTotalSumAndHoursByCompanyNameAndYear($companyName, $year);
-        AuditResponse::success($data);
+        AuditResponse::success($this->repository->getTotalSumAndHoursByCompanyNameAndYear($companyName, $year));
     }
 
     private function getTotalByYear(int $year): void
     {
-        $data = $this->repository->getTotalSumAndHoursBydYear($year);
-        AuditResponse::success($data);
+        AuditResponse::success($this->repository->getTotalSumAndHoursBydYear($year));
     }
 
     private function getStatement(int $year): void

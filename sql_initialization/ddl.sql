@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS category
     deleted_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE = InnoDB;
 
 
 CREATE TABLE IF NOT EXISTS job
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS job
     deleted_at   TIMESTAMP,
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at   TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE = InnoDB;
 
 
 CREATE TABLE IF NOT EXISTS employee
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS employee
             REFERENCES category (id)
             ON DELETE RESTRICT
             ON UPDATE CASCADE
-)ENGINE=InnoDB;
+) ENGINE = InnoDB;
 
 
 CREATE TABLE IF NOT EXISTS timesheet
@@ -77,4 +77,11 @@ CREATE TABLE IF NOT EXISTS timesheet
             REFERENCES job (id)
             ON DELETE CASCADE
             ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS user
+(
+    id            INTEGER PRIMARY KEY AUTO_INCREMENT,
+    username      VARCHAR(64)  UNIQUE NOT NULL,
+    password_hash VARCHAR(255)        NOT NULL
+) ENGINE = InnoDB;

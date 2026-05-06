@@ -1,3 +1,10 @@
+export interface AuthToken {
+    token: string
+    username: string
+    roles: string[]
+    expires_at: number
+}
+
 export interface Employee {
     id: number
     category_id: number

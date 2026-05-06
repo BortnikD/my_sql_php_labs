@@ -6,13 +6,13 @@ abstract class CrudController
 
     abstract protected function entityName(): string;
 
-    public function handle(string $method, ?int $id, array $query = []): void
+    public function handle(Request $request): void
     {
-        match ($method) {
-            'GET' => $this->handleGet($id, $query),
-            'POST' => $this->create(),
-            'PUT' => $this->update($id),
-            'DELETE' => $this->delete($id),
+        match ($request->method) {
+            'GET' => $this->handleGet($request->id, $request->query),
+            'POST' => $this->create($request),
+            'PUT' => $this->update($request->id, $request),
+            'DELETE' => $this->delete($request->id),
             default => AuditResponse::error('Method Not Allowed', 405),
         };
     }
@@ -35,26 +35,24 @@ abstract class CrudController
             : AuditResponse::error("{$this->entityName()} not found", 404);
     }
 
-    final protected function create(): void
+    final protected function create(Request $request): void
     {
-        $data = json_decode(file_get_contents('php://input'), true);
-        if (!$data) {
+        if (!$request->body) {
             AuditResponse::error('Invalid JSON body', 400);
         }
-        $id = $this->repository()->create($data);
+        $id = $this->repository()->create($request->body);
         AuditResponse::created(['id' => $id]);
     }
 
-    final protected function update(?int $id): void
+    final protected function update(?int $id, Request $request): void
     {
         if (!$id) {
             AuditResponse::error('ID is required', 400);
         }
-        $data = json_decode(file_get_contents('php://input'), true);
-        if (!$data) {
+        if (!$request->body) {
             AuditResponse::error('Invalid JSON body', 400);
         }
-        $this->repository()->update($id, $data)
+        $this->repository()->update($id, $request->body)
             ? AuditResponse::success(['updated' => true])
             : AuditResponse::error("{$this->entityName()} not found", 404);
     }
