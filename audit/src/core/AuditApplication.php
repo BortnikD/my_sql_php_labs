@@ -14,6 +14,7 @@ class AuditApplication
 
     public static function create(PDO $pdo): self
     {
+        (new AdminSeeder($pdo))->run();
         return new self($pdo);
     }
 

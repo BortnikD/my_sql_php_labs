@@ -1,18 +1,15 @@
 import axios from 'axios'
 import BASE_URL from '@/lib/constants'
+import {clearAuth, getToken} from '@/lib/auth'
 
 const axiosInstance = axios.create({
     baseURL: BASE_URL,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {'Content-Type': 'application/json'},
 })
 
 axiosInstance.interceptors.request.use((config) => {
-    if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('token')
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`
-        }
-    }
+    const token = getToken()
+    if (token) config.headers.Authorization = `Bearer ${token}`
     return config
 })
 
@@ -24,7 +21,7 @@ axiosInstance.interceptors.response.use(
             typeof window !== 'undefined' &&
             window.location.pathname !== '/auth'
         ) {
-            localStorage.removeItem('token')
+            clearAuth()
             window.location.href = '/auth'
         }
         return Promise.reject(error)

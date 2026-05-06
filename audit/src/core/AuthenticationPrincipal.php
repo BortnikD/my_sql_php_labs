@@ -2,19 +2,21 @@
 
 readonly class AuthenticationPrincipal
 {
-    /**
-     * @param string[] $roles
-     */
     public function __construct(
         public int    $id,
         public string $username,
-        public array  $roles = [],
+        public string $role = 'USER',
     )
     {
     }
 
-    public function hasRole(string $role): bool
+    public function hasRole(string $required): bool
     {
-        return in_array($role, $this->roles, true);
+        return match ($required) {
+            'USER' => true,
+            'OPERATOR' => in_array($this->role, ['OPERATOR', 'ADMIN'], true),
+            'ADMIN' => $this->role === 'ADMIN',
+            default => false,
+        };
     }
 }

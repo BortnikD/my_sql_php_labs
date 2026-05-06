@@ -6,8 +6,25 @@ abstract class CrudController
 
     abstract protected function entityName(): string;
 
+    protected function requiredReadRole(): string
+    {
+        return 'USER';
+    }
+
+    protected function requiredWriteRole(): string
+    {
+        return 'ADMIN';
+    }
+
     public function handle(Request $request): void
     {
+        $isWrite = in_array($request->method, ['POST', 'PUT', 'DELETE'], true);
+        $required = $isWrite ? $this->requiredWriteRole() : $this->requiredReadRole();
+
+        if (!$request->principal?->hasRole($required)) {
+            AuditResponse::error('Forbidden', 403);
+        }
+
         match ($request->method) {
             'GET' => $this->handleGet($request->id, $request->query),
             'POST' => $this->create($request),

@@ -8,25 +8,26 @@ readonly class JwtService
 
     public function generate(UserDto $user): AuthTokenDto
     {
-        $exp   = time() + 86400;
-        $roles = ['ROLE_USER'];
+        $exp = time() + Constants::jwtTtl();
 
-        $header  = $this->b64url(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
+        $header = $this->b64url(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
         $payload = $this->b64url(json_encode([
-            'sub'   => $user->username,
-            'id'    => $user->id,
-            'roles' => $roles,
-            'iat'   => time(),
-            'exp'   => $exp,
+            'sub' => $user->username,
+            'id' => $user->id,
+            'role' => $user->role,
+            'iat' => time(),
+            'exp' => $exp,
         ]));
-        $sig   = $this->b64url(hash_hmac('sha256', "$header.$payload", $this->secret, true));
+        $sig = $this->b64url(hash_hmac('sha256', "$header.$payload", $this->secret, true));
         $token = "$header.$payload.$sig";
 
         return new AuthTokenDto(
-            token:     $token,
-            username:  $user->username,
-            roles:     $roles,
+            token: $token,
+            username: $user->username,
+            role: $user->role,
             expiresAt: $exp,
+            loginCount: $user->loginCount,
+            lastLoginAt: $user->lastLoginAt,
         );
     }
 
@@ -54,7 +55,7 @@ readonly class JwtService
         return new AuthenticationPrincipal(
             id: (int)($payload['id'] ?? 0),
             username: $payload['sub'] ?? '',
-            roles: $payload['roles'] ?? [],
+            role: $payload['role'] ?? 'USER',
         );
     }
 

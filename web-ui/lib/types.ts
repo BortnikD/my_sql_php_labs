@@ -1,8 +1,29 @@
+export type Role = 'USER' | 'OPERATOR' | 'ADMIN'
+
 export interface AuthToken {
     token: string
     username: string
-    roles: string[]
+    role: Role
     expires_at: number
+    login_count: number
+    last_login_at: string | null
+}
+
+export interface RoleRequest {
+    id: number
+    user_id: number
+    username: string
+    status: 'PENDING' | 'APPROVED' | 'DENIED'
+    created_at: string
+}
+
+export interface UserRecord {
+    id: number
+    username: string
+    email: string
+    role: Role
+    login_count: number
+    last_login_at: string | null
 }
 
 export interface Employee {

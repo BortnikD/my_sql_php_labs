@@ -31,6 +31,7 @@ class AuthController
         }
 
         $authToken = $this->service->login($body['username'], $body['password']);
+
         if (!$authToken) {
             AuditResponse::error('Invalid credentials', 401);
         }
@@ -41,15 +42,15 @@ class AuthController
     private function register(Request $request): void
     {
         $body = $request->body;
-        if (!isset($body['username'], $body['password'])) {
-            AuditResponse::error('username and password are required', 400);
+        if (!isset($body['username'], $body['email'], $body['password'])) {
+            AuditResponse::error('username, email and password are required', 400);
         }
 
         try {
-            $id = $this->service->register($body['username'], $body['password']);
+            $id = $this->service->register($body['username'], $body['email'], $body['password']);
             AuditResponse::created(['id' => $id]);
         } catch (RuntimeException $e) {
-            AuditResponse::error($e->getMessage(), 409);
+            AuditResponse::error($e->getMessage(), 422);
         }
     }
 }

@@ -81,7 +81,25 @@ CREATE TABLE IF NOT EXISTS timesheet
 
 CREATE TABLE IF NOT EXISTS user
 (
-    id            INTEGER PRIMARY KEY AUTO_INCREMENT,
-    username      VARCHAR(64)  UNIQUE NOT NULL,
-    password_hash VARCHAR(255)        NOT NULL
+    id             INTEGER PRIMARY KEY AUTO_INCREMENT,
+    username       VARCHAR(64)  UNIQUE NOT NULL,
+    email          VARCHAR(128) UNIQUE NOT NULL,
+    password_hash  VARCHAR(255)        NOT NULL,
+    role           ENUM ('USER', 'OPERATOR', 'ADMIN') DEFAULT 'USER' NOT NULL,
+    login_count    INTEGER             DEFAULT 0      NOT NULL,
+    last_login_at  DATETIME
+) ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS role_requests
+(
+    id         INTEGER PRIMARY KEY AUTO_INCREMENT,
+    user_id    INTEGER                                         NOT NULL,
+    status     ENUM ('PENDING', 'APPROVED', 'DENIED') DEFAULT 'PENDING' NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP             NOT NULL,
+    updated_at TIMESTAMP,
+
+    CONSTRAINT fk_role_request_user
+        FOREIGN KEY (user_id)
+            REFERENCES user (id)
+            ON DELETE CASCADE
 ) ENGINE = InnoDB;

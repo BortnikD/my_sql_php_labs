@@ -15,6 +15,10 @@ class ChargesController
             AuditResponse::error('Method Not Allowed', 405);
         }
 
+        if (!$request->principal?->hasRole('OPERATOR')) {
+            AuditResponse::error('Forbidden', 403);
+        }
+
         $year = isset($request->query['year']) ? (int)$request->query['year'] : null;
 
         if (!$year) {
