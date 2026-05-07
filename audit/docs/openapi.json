@@ -2,487 +2,721 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Audit API",
-    "version": "1.0.0"
+    "version": "2.0.0",
+    "description": "REST API для системы учёта начислений. Требует JWT-авторизацию для большинства эндпоинтов."
   },
   "servers": [
-    {
-      "url": "http://localhost"
-    }
+    { "url": "http://localhost:8080", "description": "Local Docker" }
   ],
-  "paths": {
-    "/employees": {
-      "get": {
-        "summary": "Получить всех сотрудников",
-        "tags": [
-          "Employees"
-        ],
-        "responses": {
-          "200": {
-            "description": "Список сотрудников",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Employee"
-                  }
-                }
-              }
-            }
-          }
+  "security": [],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "parameters": {
+      "id": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer" }
+      }
+    },
+    "schemas": {
+      "AuthToken": {
+        "type": "object",
+        "properties": {
+          "token":         { "type": "string", "description": "JWT токен" },
+          "username":      { "type": "string" },
+          "role":          { "type": "string", "enum": ["USER", "OPERATOR", "ADMIN"] },
+          "expires_at":    { "type": "integer", "description": "Unix timestamp истечения" },
+          "login_count":   { "type": "integer" },
+          "last_login_at": { "type": "string", "format": "date-time", "nullable": true }
         }
       },
+      "LoginInput": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "username": { "type": "string" },
+          "password": { "type": "string", "format": "password" }
+        }
+      },
+      "RegisterInput": {
+        "type": "object",
+        "required": ["username", "email", "password"],
+        "properties": {
+          "username": { "type": "string", "minLength": 3 },
+          "email":    { "type": "string", "format": "email" },
+          "password": { "type": "string", "format": "password", "minLength": 6 }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id":            { "type": "integer" },
+          "username":      { "type": "string" },
+          "email":         { "type": "string", "format": "email" },
+          "role":          { "type": "string", "enum": ["USER", "OPERATOR", "ADMIN"] },
+          "login_count":   { "type": "integer" },
+          "last_login_at": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "RoleUpdateInput": {
+        "type": "object",
+        "required": ["role"],
+        "properties": {
+          "role": { "type": "string", "enum": ["USER", "OPERATOR", "ADMIN"] }
+        }
+      },
+      "RoleRequest": {
+        "type": "object",
+        "properties": {
+          "id":         { "type": "integer" },
+          "user_id":    { "type": "integer" },
+          "username":   { "type": "string" },
+          "status":     { "type": "string", "enum": ["PENDING", "APPROVED", "DENIED"] },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Employee": {
+        "type": "object",
+        "properties": {
+          "id":          { "type": "integer" },
+          "category_id": { "type": "integer" },
+          "first_name":  { "type": "string" },
+          "last_name":   { "type": "string" },
+          "middle_name": { "type": "string", "nullable": true },
+          "birth_date":  { "type": "string", "format": "date" },
+          "is_deleted":  { "type": "boolean" },
+          "created_at":  { "type": "string", "format": "date-time" },
+          "updated_at":  { "type": "string", "format": "date-time" },
+          "deleted_at":  { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "EmployeeInput": {
+        "type": "object",
+        "required": ["category_id", "first_name", "last_name", "birth_date"],
+        "properties": {
+          "category_id": { "type": "integer" },
+          "first_name":  { "type": "string" },
+          "last_name":   { "type": "string" },
+          "middle_name": { "type": "string" },
+          "birth_date":  { "type": "string", "format": "date" }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id":         { "type": "integer" },
+          "name":       { "type": "string" },
+          "rate":       { "type": "number", "description": "Ставка (руб/час)" },
+          "is_deleted": { "type": "boolean" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "deleted_at": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "CategoryInput": {
+        "type": "object",
+        "required": ["name", "rate"],
+        "properties": {
+          "name": { "type": "string" },
+          "rate": { "type": "number" }
+        }
+      },
+      "Job": {
+        "type": "object",
+        "properties": {
+          "id":           { "type": "integer" },
+          "name":         { "type": "string" },
+          "company_name": { "type": "string", "nullable": true },
+          "is_completed": { "type": "boolean" },
+          "start_at":     { "type": "string", "format": "date-time", "nullable": true },
+          "completed_at": { "type": "string", "format": "date-time", "nullable": true },
+          "is_deleted":   { "type": "boolean" },
+          "created_at":   { "type": "string", "format": "date-time" },
+          "updated_at":   { "type": "string", "format": "date-time" },
+          "deleted_at":   { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "JobInput": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name":         { "type": "string" },
+          "company_name": { "type": "string" },
+          "is_completed": { "type": "boolean" },
+          "start_at":     { "type": "string", "format": "date-time" },
+          "completed_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Timesheet": {
+        "type": "object",
+        "properties": {
+          "id":          { "type": "integer" },
+          "employee_id": { "type": "integer" },
+          "job_id":      { "type": "integer" },
+          "hours":       { "type": "number" },
+          "is_deleted":  { "type": "boolean" },
+          "created_at":  { "type": "string", "format": "date-time" },
+          "updated_at":  { "type": "string", "format": "date-time" },
+          "deleted_at":  { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "TimesheetInput": {
+        "type": "object",
+        "required": ["employee_id", "job_id", "hours"],
+        "properties": {
+          "employee_id": { "type": "integer" },
+          "job_id":      { "type": "integer" },
+          "hours":       { "type": "number" }
+        }
+      },
+      "ChargeItem": {
+        "type": "object",
+        "properties": {
+          "full_name":      { "type": "string", "example": "Иванов И.И." },
+          "category_name":  { "type": "string" },
+          "rate":           { "type": "number" },
+          "hours":          { "type": "number" },
+          "completed_at":   { "type": "string", "format": "date-time" },
+          "paid_out":       { "type": "number", "description": "rate × hours" }
+        }
+      },
+      "ChargesTotal": {
+        "type": "object",
+        "properties": {
+          "company_name": { "type": "string" },
+          "total_hours":  { "type": "number" },
+          "total_sum":    { "type": "number" }
+        }
+      },
+      "CompanyStatement": {
+        "type": "object",
+        "properties": {
+          "company_name": { "type": "string" },
+          "charges":      { "type": "array", "items": { "$ref": "#/components/schemas/ChargeItem" } },
+          "total_hours":  { "type": "number" },
+          "total_sum":    { "type": "number" }
+        }
+      },
+      "ChargesStatement": {
+        "type": "object",
+        "properties": {
+          "companies":   { "type": "array", "items": { "$ref": "#/components/schemas/CompanyStatement" } },
+          "total_hours": { "type": "number" },
+          "total_sum":   { "type": "number" }
+        }
+      },
+      "CreatedResponse": {
+        "type": "object",
+        "properties": { "id": { "type": "integer" } }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": { "error": { "type": "string" } }
+      }
+    },
+    "responses": {
+      "Created": {
+        "description": "Ресурс создан",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreatedResponse" } } }
+      },
+      "Updated": {
+        "description": "Обновлено",
+        "content": { "application/json": { "schema": { "type": "object", "properties": { "updated": { "type": "boolean" } } } } }
+      },
+      "Deleted": {
+        "description": "Удалено",
+        "content": { "application/json": { "schema": { "type": "object", "properties": { "deleted": { "type": "boolean" } } } } }
+      },
+      "BadRequest": {
+        "description": "Неверный запрос",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+      },
+      "Unauthorized": {
+        "description": "Не авторизован — отсутствует или недействителен JWT токен",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+      },
+      "Forbidden": {
+        "description": "Недостаточно прав",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+      },
+      "NotFound": {
+        "description": "Не найдено",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+      }
+    }
+  },
+  "paths": {
+    "/auth/login": {
       "post": {
-        "summary": "Создать сотрудника",
-        "tags": [
-          "Employees"
-        ],
+        "summary": "Вход в систему",
+        "tags": ["Auth"],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EmployeeInput"
-              }
-            }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginInput" } } }
         },
         "responses": {
-          "201": {
-            "description": "Создан",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreatedResponse"
-                }
-              }
-            }
+          "200": {
+            "description": "Успешный вход",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthToken" } } }
           },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "summary": "Регистрация",
+        "description": "После регистрации создаётся заявка на роль Оператора (PENDING). По умолчанию роль USER.",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RegisterInput" } } }
+        },
+        "responses": {
+          "201": { "$ref": "#/components/responses/Created" },
+          "422": {
+            "description": "Ошибка валидации (короткий username/пароль, невалидный email, дубликат)",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
           }
         }
       }
     },
-    "/employees/{id}": {
-      "parameters": [
-        {
-          "$ref": "#/components/parameters/id"
-        }
-      ],
+    "/users": {
       "get": {
-        "summary": "Получить сотрудника по ID",
-        "tags": [
-          "Employees"
-        ],
+        "summary": "Список всех пользователей",
+        "tags": ["Users"],
+        "security": [{ "bearerAuth": [] }],
         "responses": {
           "200": {
-            "description": "Сотрудник",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Employee"
-                }
-              }
-            }
+            "description": "Список пользователей",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/User" } } } }
           },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/users/{id}/role": {
+      "parameters": [{ "$ref": "#/components/parameters/id" }],
+      "put": {
+        "summary": "Изменить роль пользователя",
+        "description": "Доступно только ADMIN. Нельзя менять роль другого ADMIN.",
+        "tags": ["Users"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RoleUpdateInput" } } }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Updated" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/users/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/id" }],
+      "delete": {
+        "summary": "Удалить пользователя",
+        "description": "Доступно только ADMIN. Нельзя удалить другого ADMIN или самого себя.",
+        "tags": ["Users"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Deleted" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/users/role-request": {
+      "get": {
+        "summary": "Моя заявка на роль Оператора",
+        "tags": ["Users"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Последняя заявка или {status: null}",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RoleRequest" } } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/users/role-requests": {
+      "get": {
+        "summary": "Список ожидающих заявок на роль",
+        "tags": ["Users"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Список заявок",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/RoleRequest" } } } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/users/role-requests/{id}/approve": {
+      "parameters": [{ "$ref": "#/components/parameters/id" }],
+      "put": {
+        "summary": "Одобрить заявку на роль",
+        "tags": ["Users"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Updated" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/users/role-requests/{id}/deny": {
+      "parameters": [{ "$ref": "#/components/parameters/id" }],
+      "put": {
+        "summary": "Отклонить заявку на роль",
+        "tags": ["Users"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Updated" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/employees": {
+      "get": {
+        "summary": "Список сотрудников",
+        "tags": ["Employees"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Список сотрудников",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Employee" } } } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "summary": "Создать сотрудника",
+        "tags": ["Employees"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmployeeInput" } } }
+        },
+        "responses": {
+          "201": { "$ref": "#/components/responses/Created" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/employees/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/id" }],
+      "get": {
+        "summary": "Получить сотрудника по ID",
+        "tags": ["Employees"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Сотрудник", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Employee" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
         }
       },
       "put": {
         "summary": "Обновить сотрудника",
-        "tags": [
-          "Employees"
-        ],
+        "tags": ["Employees"],
+        "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EmployeeInput"
-              }
-            }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmployeeInput" } } }
         },
         "responses": {
-          "200": {
-            "$ref": "#/components/responses/Updated"
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
+          "200": { "$ref": "#/components/responses/Updated" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
         }
       },
       "delete": {
         "summary": "Удалить сотрудника (soft-delete)",
-        "tags": [
-          "Employees"
-        ],
+        "tags": ["Employees"],
+        "security": [{ "bearerAuth": [] }],
         "responses": {
-          "200": {
-            "$ref": "#/components/responses/Deleted"
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
+          "200": { "$ref": "#/components/responses/Deleted" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
         }
       }
     },
     "/categories": {
       "get": {
-        "summary": "Получить все категории",
-        "tags": [
-          "Categories"
-        ],
+        "summary": "Список категорий",
+        "tags": ["Categories"],
+        "security": [{ "bearerAuth": [] }],
         "responses": {
           "200": {
             "description": "Список категорий",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Category"
-                  }
-                }
-              }
-            }
-          }
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Category" } } } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
         }
       },
       "post": {
         "summary": "Создать категорию",
-        "tags": [
-          "Categories"
-        ],
+        "tags": ["Categories"],
+        "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CategoryInput"
-              }
-            }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CategoryInput" } } }
         },
         "responses": {
-          "201": {
-            "$ref": "#/components/responses/Created"
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          }
+          "201": { "$ref": "#/components/responses/Created" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
         }
       }
     },
     "/categories/{id}": {
-      "parameters": [
-        {
-          "$ref": "#/components/parameters/id"
-        }
-      ],
+      "parameters": [{ "$ref": "#/components/parameters/id" }],
       "get": {
         "summary": "Получить категорию по ID",
-        "tags": [
-          "Categories"
-        ],
+        "tags": ["Categories"],
+        "security": [{ "bearerAuth": [] }],
         "responses": {
-          "200": {
-            "description": "Категория",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Category"
-                }
-              }
-            }
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
+          "200": { "description": "Категория", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Category" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
         }
       },
       "put": {
         "summary": "Обновить категорию",
-        "tags": [
-          "Categories"
-        ],
+        "tags": ["Categories"],
+        "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CategoryInput"
-              }
-            }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CategoryInput" } } }
         },
         "responses": {
-          "200": {
-            "$ref": "#/components/responses/Updated"
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
+          "200": { "$ref": "#/components/responses/Updated" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
         }
       },
       "delete": {
         "summary": "Удалить категорию (soft-delete)",
-        "tags": [
-          "Categories"
-        ],
+        "tags": ["Categories"],
+        "security": [{ "bearerAuth": [] }],
         "responses": {
-          "200": {
-            "$ref": "#/components/responses/Deleted"
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
+          "200": { "$ref": "#/components/responses/Deleted" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
         }
       }
     },
     "/jobs": {
       "get": {
-        "summary": "Получить все работы",
-        "tags": [
-          "Jobs"
-        ],
+        "summary": "Список работ",
+        "tags": ["Jobs"],
+        "security": [{ "bearerAuth": [] }],
         "responses": {
           "200": {
             "description": "Список работ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Job"
-                  }
-                }
-              }
-            }
-          }
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Job" } } } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
         }
       },
       "post": {
         "summary": "Создать работу",
-        "tags": [
-          "Jobs"
-        ],
+        "tags": ["Jobs"],
+        "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/JobInput"
-              }
-            }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/JobInput" } } }
         },
         "responses": {
-          "201": {
-            "$ref": "#/components/responses/Created"
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          }
+          "201": { "$ref": "#/components/responses/Created" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
         }
       }
     },
     "/jobs/{id}": {
-      "parameters": [
-        {
-          "$ref": "#/components/parameters/id"
-        }
-      ],
+      "parameters": [{ "$ref": "#/components/parameters/id" }],
       "get": {
         "summary": "Получить работу по ID",
-        "tags": [
-          "Jobs"
-        ],
+        "tags": ["Jobs"],
+        "security": [{ "bearerAuth": [] }],
         "responses": {
-          "200": {
-            "description": "Работа",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Job"
-                }
-              }
-            }
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
+          "200": { "description": "Работа", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Job" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
         }
       },
       "put": {
         "summary": "Обновить работу",
-        "tags": [
-          "Jobs"
-        ],
+        "tags": ["Jobs"],
+        "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/JobInput"
-              }
-            }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/JobInput" } } }
         },
         "responses": {
-          "200": {
-            "$ref": "#/components/responses/Updated"
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
+          "200": { "$ref": "#/components/responses/Updated" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
         }
       },
       "delete": {
         "summary": "Удалить работу (soft-delete)",
-        "tags": [
-          "Jobs"
-        ],
+        "tags": ["Jobs"],
+        "security": [{ "bearerAuth": [] }],
         "responses": {
-          "200": {
-            "$ref": "#/components/responses/Deleted"
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
+          "200": { "$ref": "#/components/responses/Deleted" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
         }
       }
     },
     "/timesheets": {
       "get": {
-        "summary": "Получить записи табеля",
-        "tags": [
-          "Timesheets"
-        ],
+        "summary": "Список записей табеля",
+        "tags": ["Timesheets"],
+        "security": [{ "bearerAuth": [] }],
         "parameters": [
-          {
-            "name": "employee_id",
-            "in": "query",
-            "schema": {
-              "type": "integer"
-            },
-            "description": "Фильтр по сотруднику"
-          },
-          {
-            "name": "job_id",
-            "in": "query",
-            "schema": {
-              "type": "integer"
-            },
-            "description": "Фильтр по работе"
-          }
+          { "name": "employee_id", "in": "query", "schema": { "type": "integer" }, "description": "Фильтр по сотруднику" },
+          { "name": "job_id",      "in": "query", "schema": { "type": "integer" }, "description": "Фильтр по работе" }
         ],
         "responses": {
           "200": {
             "description": "Список записей",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Timesheet"
-                  }
-                }
-              }
-            }
-          }
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Timesheet" } } } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
         }
       },
       "post": {
         "summary": "Создать запись табеля",
-        "tags": [
-          "Timesheets"
-        ],
+        "tags": ["Timesheets"],
+        "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TimesheetInput"
-              }
-            }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimesheetInput" } } }
         },
         "responses": {
-          "201": {
-            "$ref": "#/components/responses/Created"
+          "201": { "$ref": "#/components/responses/Created" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/timesheets/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/id" }],
+      "get": {
+        "summary": "Получить запись табеля по ID",
+        "tags": ["Timesheets"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Запись табеля", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Timesheet" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "put": {
+        "summary": "Обновить запись табеля",
+        "tags": ["Timesheets"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimesheetInput" } } }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Updated" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "summary": "Удалить запись табеля (soft-delete)",
+        "tags": ["Timesheets"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Deleted" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/charges/statement": {
+      "get": {
+        "summary": "Сводная ведомость по всем предприятиям за год",
+        "description": "Возвращает начисления, сгруппированные по предприятиям, с итогами по каждому и общим итогом.",
+        "tags": ["Charges"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "year", "in": "query", "required": true, "schema": { "type": "integer" }, "description": "Год" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ведомость",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ChargesStatement" } } }
           },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
         }
       }
     },
     "/charges": {
       "get": {
-        "summary": "Детальная ведомость начислений",
-        "description": "Возвращает начисления по завершённым работам предприятия за год",
-        "tags": [
-          "Charges"
-        ],
+        "summary": "Детальные начисления по предприятию",
+        "tags": ["Charges"],
+        "security": [{ "bearerAuth": [] }],
         "parameters": [
-          {
-            "name": "company_name",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Название предприятия"
-          },
-          {
-            "name": "year",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            },
-            "description": "Год"
-          }
+          { "name": "company_name", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "year",         "in": "query", "required": true, "schema": { "type": "integer" } }
         ],
         "responses": {
           "200": {
             "description": "Список начислений",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ChargeItem"
-                  }
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ChargeItem" } } } }
           },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/charges/total": {
+      "get": {
+        "summary": "Итого по предприятию за год",
+        "tags": ["Charges"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "company_name", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "year",         "in": "query", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Итого",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ChargesTotal" } } }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
         }
       }
     },
@@ -490,460 +724,17 @@
       "get": {
         "summary": "Итого по всем предприятиям за год",
         "tags": ["Charges"],
+        "security": [{ "bearerAuth": [] }],
         "parameters": [
-          {
-            "name": "year",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer" },
-            "description": "Год"
-          }
+          { "name": "year", "in": "query", "required": true, "schema": { "type": "integer" } }
         ],
         "responses": {
           "200": {
-            "description": "Итого по всем предприятиям",
-            "content": {
-              "application/json": {
-                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ChargesTotal" } }
-              }
-            }
+            "description": "Список итогов по предприятиям",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ChargesTotal" } } } }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" }
-        }
-      }
-    },
-    "/charges/total": {
-      "get": {
-        "summary": "Итого по предприятию",
-        "description": "Возвращает суммарные часы и сумму по предприятию за год",
-        "tags": [
-          "Charges"
-        ],
-        "parameters": [
-          {
-            "name": "company_name",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Название предприятия"
-          },
-          {
-            "name": "year",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            },
-            "description": "Год"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Итого",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ChargesTotal"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          }
-        }
-      }
-    },
-    "/timesheets/{id}": {
-      "parameters": [
-        {
-          "$ref": "#/components/parameters/id"
-        }
-      ],
-      "get": {
-        "summary": "Получить запись табеля по ID",
-        "tags": [
-          "Timesheets"
-        ],
-        "responses": {
-          "200": {
-            "description": "Запись табеля",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Timesheet"
-                }
-              }
-            }
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        }
-      },
-      "put": {
-        "summary": "Обновить запись табеля",
-        "tags": [
-          "Timesheets"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TimesheetInput"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/Updated"
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        }
-      },
-      "delete": {
-        "summary": "Удалить запись табеля (soft-delete)",
-        "tags": [
-          "Timesheets"
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/Deleted"
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        }
-      }
-    }
-  },
-  "components": {
-    "parameters": {
-      "id": {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "schema": {
-          "type": "integer"
-        }
-      }
-    },
-    "schemas": {
-      "Employee": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer"
-          },
-          "category_id": {
-            "type": "integer"
-          },
-          "first_name": {
-            "type": "string"
-          },
-          "last_name": {
-            "type": "string"
-          },
-          "middle_name": {
-            "type": "string",
-            "nullable": true
-          },
-          "birth_date": {
-            "type": "string",
-            "format": "date"
-          },
-          "is_deleted": {
-            "type": "boolean"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "deleted_at": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          }
-        }
-      },
-      "EmployeeInput": {
-        "type": "object",
-        "required": [
-          "category_id",
-          "first_name",
-          "last_name",
-          "birth_date"
-        ],
-        "properties": {
-          "category_id": {
-            "type": "integer"
-          },
-          "first_name": {
-            "type": "string"
-          },
-          "last_name": {
-            "type": "string"
-          },
-          "middle_name": {
-            "type": "string"
-          },
-          "birth_date": {
-            "type": "string",
-            "format": "date"
-          }
-        }
-      },
-      "Category": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          },
-          "is_deleted": {
-            "type": "boolean"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "deleted_at": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          }
-        }
-      },
-      "CategoryInput": {
-        "type": "object",
-        "required": [
-          "name"
-        ],
-        "properties": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
-      "Job": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          },
-          "is_deleted": {
-            "type": "boolean"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "deleted_at": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          }
-        }
-      },
-      "JobInput": {
-        "type": "object",
-        "required": [
-          "name"
-        ],
-        "properties": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
-      "Timesheet": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer"
-          },
-          "employee_id": {
-            "type": "integer"
-          },
-          "job_id": {
-            "type": "integer"
-          },
-          "hours": {
-            "type": "number"
-          },
-          "is_deleted": {
-            "type": "boolean"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "deleted_at": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          }
-        }
-      },
-      "TimesheetInput": {
-        "type": "object",
-        "required": [
-          "employee_id",
-          "job_id",
-          "hours"
-        ],
-        "properties": {
-          "employee_id": {
-            "type": "integer"
-          },
-          "job_id": {
-            "type": "integer"
-          },
-          "hours": {
-            "type": "number"
-          }
-        }
-      },
-      "ChargeItem": {
-        "type": "object",
-        "properties": {
-          "full_name": {
-            "type": "string",
-            "example": "И.И.Иванов"
-          },
-          "category_name": {
-            "type": "string",
-            "description": "Название категории"
-          },
-          "rate": {
-            "type": "number",
-            "description": "Ставка категории"
-          },
-          "completed_at": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Дата завершения работы"
-          },
-          "hours": {
-            "type": "number",
-            "description": "Часы из табеля"
-          },
-          "paid_out": {
-            "type": "number",
-            "description": "Итого (rate * hours)"
-          }
-        }
-      },
-      "ChargesTotal": {
-        "type": "object",
-        "properties": {
-          "company_name": {
-            "type": "string"
-          },
-          "total_hours": {
-            "type": "number"
-          },
-          "total_sum": {
-            "type": "number"
-          }
-        }
-      },
-      "CreatedResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer"
-          }
-        }
-      },
-      "ErrorResponse": {
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "responses": {
-      "Created": {
-        "description": "Ресурс создан",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/CreatedResponse"
-            }
-          }
-        }
-      },
-      "Updated": {
-        "description": "Обновлено",
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "object",
-              "properties": {
-                "updated": {
-                  "type": "boolean"
-                }
-              }
-            }
-          }
-        }
-      },
-      "Deleted": {
-        "description": "Удалено",
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "object",
-              "properties": {
-                "deleted": {
-                  "type": "boolean"
-                }
-              }
-            }
-          }
-        }
-      },
-      "BadRequest": {
-        "description": "Неверный запрос",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/ErrorResponse"
-            }
-          }
-        }
-      },
-      "NotFound": {
-        "description": "Не найдено",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/ErrorResponse"
-            }
-          }
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
         }
       }
     }

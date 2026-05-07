@@ -81,7 +81,17 @@ export default function EntityModal<T, Dto>({title, fields, initialValues, onCon
                         return (
                             <label key={key} className="flex flex-col gap-1">
                                 <span className="text-xs text-muted uppercase tracking-wide">{f.label}</span>
-                                {f.relation ? (
+                                {f.options ? (
+                                    <select
+                                        className={`modal-input ${errors[key] ? 'border-red-500' : ''}`}
+                                        value={form[key]}
+                                        onChange={e => set(key, e.target.value)}
+                                    >
+                                        {f.options.map(o => (
+                                            <option key={o} value={o}>{o}</option>
+                                        ))}
+                                    </select>
+                                ) : f.relation ? (
                                     <select
                                         className={`modal-input ${errors[key] ? 'border-red-500' : ''}`}
                                         value={form[key]}

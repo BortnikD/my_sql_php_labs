@@ -13,6 +13,7 @@ export interface FieldDef<T> {
     label: string
     type?: 'text' | 'number' | 'date'
     readonly?: boolean
+    options?: string[]
     validations?: FieldValidation[]
     relation?: {
         fetchOptions: () => Promise<RelationOption[]>

@@ -1,5 +1,6 @@
 import axiosInstance from '@/lib/axiosInstance'
-import {RoleRequest, UserRecord} from '@/lib/types'
+import { RoleRequest, UserRecord } from '@/lib/types'
+import { Role } from '@/lib/types'
 
 class UserClient {
     async getMyRoleRequest(): Promise<RoleRequest | null> {
@@ -23,6 +24,14 @@ class UserClient {
 
     async denyRoleRequest(id: number): Promise<void> {
         await axiosInstance.put(`/users/role-requests/${id}/deny`)
+    }
+
+    async setRole(id: number, role: Role): Promise<void> {
+        await axiosInstance.put(`/users/${id}/role`, { role })
+    }
+
+    async deleteUser(id: number): Promise<void> {
+        await axiosInstance.delete(`/users/${id}`)
     }
 }
 

@@ -10,12 +10,14 @@ interface Props<T extends { id: number }, CreateDto, UpdateDto> {
     title: string
     client: CrudClient<T, CreateDto, UpdateDto>
     fields: FieldDef<T>[]
+    disableCreate?: boolean
 }
 
 export default function DataTable<T extends { id: number }, CreateDto, UpdateDto>({
                                                                                       title,
                                                                                       client,
                                                                                       fields,
+                                                                                      disableCreate = false,
                                                                                   }: Props<T, CreateDto, UpdateDto>) {
 
     const [data, setData] = useState<T[]>([])
@@ -86,17 +88,19 @@ export default function DataTable<T extends { id: number }, CreateDto, UpdateDto
         <div>
             <div className="flex items-center justify-between mb-4">
                 <h1 className="text-2xl font-bold">{title}</h1>
-                <button
-                    onClick={() => setShowCreate(true)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-accent text-white hover:bg-accent-hover transition"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="12" y1="5" x2="12" y2="19"/>
-                        <line x1="5" y1="12" x2="19" y2="12"/>
-                    </svg>
-                    Добавить
-                </button>
+                {!disableCreate && (
+                    <button
+                        onClick={() => setShowCreate(true)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-accent text-white hover:bg-accent-hover transition"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Добавить
+                    </button>
+                )}
             </div>
 
             <div className="overflow-x-auto rounded-xl shadow">

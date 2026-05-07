@@ -8,7 +8,7 @@ import {getRole, getLoginCount, getLastLoginAt, getToken} from '@/lib/auth'
 const ALLOWED_PATHS: Record<Role, string[]> = {
     USER: ['/'],
     OPERATOR: ['/', '/charges'],
-    ADMIN: ['/', '/employees', '/categories', '/jobs', '/timesheets', '/charges', '/admin'],
+    ADMIN: ['/', '/employees', '/categories', '/jobs', '/timesheets', '/charges', '/admin', '/users'],
 }
 
 function WelcomeBanner({onClose}: { onClose: () => void }) {

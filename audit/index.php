@@ -1,6 +1,5 @@
 <?php
 
-// ── Infrastructure ─────────────────────────────────────────────────────────
 require_once __DIR__ . '/src/config/Database.php';
 require_once __DIR__ . '/src/config/Config.php';
 require_once __DIR__ . '/src/config/Constants.php';
